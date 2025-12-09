@@ -129,7 +129,7 @@ This is a **clean-room implementation** based on the publicly available Z-Machin
 - [Z-Machine Standards Document 1.1](https://www.inform-fiction.org/zmachine/standards/z1point1/) - The definitive spec by Graham Nelson
 
 ### Inspiration
-- [zmachine](https://github.com/ravdin/zmachine) - Go implementation that inspired the architecture
+- [zmachine](https://github.com/ravdin/zmachine) - Python implementation that inspired the architecture
 - [xyppy](https://github.com/theinternetftw/xyppy) - Python Z-Machine used as reference
 
 ### Development Tools
@@ -146,7 +146,7 @@ The Z-Machine specification itself is public domain. Game story files (`.z3`, `.
 
 - **Graham Nelson** - Z-Machine Standards Document
 - **Infocom** - Original Z-Machine design and games
-- **[ravdin/zmachine](https://github.com/ravdin/zmachine)** - Go implementation (architecture inspiration)
+- **[ravdin/zmachine](https://github.com/ravdin/zmachine)** - Python implementation (architecture inspiration)
 - **Anthropic** - Claude Code, the AI that wrote this
 - **vibing-steampunk** - MCP bridge that made it possible
 
