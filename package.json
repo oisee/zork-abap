@@ -4,7 +4,7 @@
   "private": true,
   "description": "A Z-Machine V3 interpreter written in ABAP. Play classic Infocom text adventures like Zork on SAP systems.",
   "scripts": {
-    "test": "abap_transpile"
+    "test": "abaplint && abap_transpile abap_transpile.jsonc"
   },
   "repository": {
     "type": "git",
