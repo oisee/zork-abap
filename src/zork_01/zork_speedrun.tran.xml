@@ -3,21 +3,21 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <TSTC>
-    <TCODE>ZORK</TCODE>
-    <PGMNA>ZORK_00_CONSOLE</PGMNA>
+    <TCODE>ZORK_SPEEDRUN</TCODE>
+    <PGMNA>ZORK_01_SPEEDRUN</PGMNA>
     <DYPNO>1000</DYPNO>
     <CINFO>gA==</CINFO>
    </TSTC>
    <TSTCC>
-    <TCODE>ZORK</TCODE>
+    <TCODE>ZORK_SPEEDRUN</TCODE>
     <S_WEBGUI>1</S_WEBGUI>
     <S_WIN32>X</S_WIN32>
     <S_PLATIN>X</S_PLATIN>
    </TSTCC>
    <TSTCT>
     <SPRSL>E</SPRSL>
-    <TCODE>ZORK</TCODE>
-    <TTEXT>Z-Machine (v3) ABAP</TTEXT>
+    <TCODE>ZORK_SPEEDRUN</TCODE>
+    <TTEXT>Z-Machine (v3) Game Speedrun</TTEXT>
    </TSTCT>
   </asx:values>
  </asx:abap>

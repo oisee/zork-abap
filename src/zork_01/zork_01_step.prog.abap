@@ -2,7 +2,7 @@
 *& Report zork_00_RUN - Z-Machine V3 Runner
 *& Loads ZORK.Z3 from SMW0 ($ZORK package)
 *&---------------------------------------------------------------------*
-REPORT zork_00_step.
+REPORT zork_01_step.
 
 DATA: go_zmachine TYPE REF TO zcl_ork_00_zmachine,
       gv_story    TYPE xstring.

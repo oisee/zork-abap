@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZORK_00_CONSOLE</NAME>
+    <NAME>ZORK_01_CONSOLE</NAME>
     <DBAPL>S</DBAPL>
     <SUBC>1</SUBC>
     <FIXPT>X</FIXPT>
@@ -13,7 +13,7 @@
    <DYNPROS>
     <item>
      <HEADER>
-      <PROGRAM>ZORK_00_CONSOLE</PROGRAM>
+      <PROGRAM>ZORK_01_CONSOLE</PROGRAM>
       <SCREEN>0100</SCREEN>
       <LANGUAGE>E</LANGUAGE>
       <DESCRIPT>Console</DESCRIPT>
@@ -203,32 +203,6 @@
       <MENUCODE>000001</MENUCODE>
      </RSMPE_ACT>
     </ACT>
-    <BUT>
-     <RSMPE_BUT>
-      <PFK_CODE>000001</PFK_CODE>
-      <CODE>0001</CODE>
-      <NO>01</NO>
-      <PFNO>02</PFNO>
-     </RSMPE_BUT>
-     <RSMPE_BUT>
-      <PFK_CODE>000001</PFK_CODE>
-      <CODE>0001</CODE>
-      <NO>02</NO>
-      <PFNO>08</PFNO>
-     </RSMPE_BUT>
-     <RSMPE_BUT>
-      <PFK_CODE>000001</PFK_CODE>
-      <CODE>0001</CODE>
-      <NO>03</NO>
-      <PFNO>13</PFNO>
-     </RSMPE_BUT>
-     <RSMPE_BUT>
-      <PFK_CODE>000001</PFK_CODE>
-      <CODE>0001</CODE>
-      <NO>04</NO>
-      <PFNO>14</PFNO>
-     </RSMPE_BUT>
-    </BUT>
     <PFK>
      <RSMPE_PFK>
       <CODE>000001</CODE>
@@ -286,19 +260,27 @@
       <STATUS>STANDARD</STATUS>
       <FUNCTION>EXIT</FUNCTION>
      </RSMPE_STAF>
+     <RSMPE_STAF>
+      <STATUS>STANDARD</STATUS>
+      <FUNCTION>ONLI</FUNCTION>
+     </RSMPE_STAF>
+     <RSMPE_STAF>
+      <STATUS>STANDARD</STATUS>
+      <FUNCTION>PICK</FUNCTION>
+     </RSMPE_STAF>
     </SET>
     <DOC>
      <RSMPE_ATRT>
       <OBJ_TYPE>A</OBJ_TYPE>
       <OBJ_CODE>000001</OBJ_CODE>
       <MODAL>D</MODAL>
-      <INT_NOTE>Selc</INT_NOTE>
+      <INT_NOTE>Standard</INT_NOTE>
      </RSMPE_ATRT>
      <RSMPE_ATRT>
       <OBJ_TYPE>P</OBJ_TYPE>
       <OBJ_CODE>000001</OBJ_CODE>
       <MODAL>D</MODAL>
-      <INT_NOTE>Selc</INT_NOTE>
+      <INT_NOTE>Standard</INT_NOTE>
      </RSMPE_ATRT>
      <RSMPE_ATRT>
       <OBJ_TYPE>B</OBJ_TYPE>

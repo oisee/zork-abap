@@ -3,7 +3,7 @@
 *& Z-Machine V3 Interactive Console
 *& HTML-based display with input field - dynamic line count
 *&---------------------------------------------------------------------*
-REPORT zork_00_console.
+REPORT zork_01_console.
 
 CONSTANTS:
   gc_default_max_lines TYPE i VALUE 36,

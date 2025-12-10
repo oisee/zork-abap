@@ -2,7 +2,7 @@
 *& Report ZORK_00_SPEEDRUN
 *& Automated Z-Machine test runner - feed game with script
 *&---------------------------------------------------------------------*
-REPORT zork_00_speedrun.
+REPORT zork_01_speedrun.
 
 *----------------------------------------------------------------------*
 * Selection Screen - Game Source
