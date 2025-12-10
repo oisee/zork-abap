@@ -1,0 +1,19 @@
+{
+  "name": "zork-abap",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Z-Machine V3 interpreter written in ABAP. Play classic Infocom text adventures like Zork on SAP systems.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oisee/zork-abap.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oisee/zork-abap/issues"
+  },
+  "homepage": "https://github.com/oisee/zork-abap#readme"
+}
