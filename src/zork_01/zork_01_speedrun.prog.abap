@@ -118,6 +118,24 @@ AT SELECTION-SCREEN OUTPUT.
     ENDIF.
   ENDLOOP.
 
+FORM select_script_file.
+  DATA: lt_filetab TYPE filetable,
+        lv_rc      TYPE i.
+
+  cl_gui_frontend_services=>file_open_dialog(
+    EXPORTING
+      window_title      = 'Select Script File (commands)'
+      file_filter       = 'Text Files (*.txt)|*.txt|All (*.*)|*.*'
+      default_extension = 'txt'
+    CHANGING
+      file_table        = lt_filetab
+      rc                = lv_rc ).
+
+  IF lv_rc >= 1.
+    p_spath = lt_filetab[ 1 ]-filename.
+  ENDIF.
+ENDFORM.
+
 *----------------------------------------------------------------------*
 * At Selection Screen - F4 Help for file paths
 *----------------------------------------------------------------------*
@@ -139,21 +157,7 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
   ENDIF.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
-  DATA: lt_filetab TYPE filetable,
-        lv_rc      TYPE i.
-
-  cl_gui_frontend_services=>file_open_dialog(
-    EXPORTING
-      window_title      = 'Select Script File (commands)'
-      file_filter       = 'Text Files (*.txt)|*.txt|All (*.*)|*.*'
-      default_extension = 'txt'
-    CHANGING
-      file_table        = lt_filetab
-      rc                = lv_rc ).
-
-  IF lv_rc >= 1.
-    p_spath = lt_filetab[ 1 ]-filename.
-  ENDIF.
+perform select_script_file.
 
 
 START-OF-SELECTION.
