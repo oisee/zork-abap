@@ -118,27 +118,7 @@ AT SELECTION-SCREEN OUTPUT.
     ENDIF.
   ENDLOOP.
 
-*----------------------------------------------------------------------*
-* At Selection Screen - F4 Help for file paths
-*----------------------------------------------------------------------*
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
-  DATA: lt_filetab TYPE filetable,
-        lv_rc      TYPE i.
-
-  cl_gui_frontend_services=>file_open_dialog(
-    EXPORTING
-      window_title      = 'Select Z-Machine Story File'
-      file_filter       = 'Z-Machine (*.z3;*.z5;*.z8)|*.z3;*.z5;*.z8|All (*.*)|*.*'
-      default_extension = 'z3'
-    CHANGING
-      file_table        = lt_filetab
-      rc                = lv_rc ).
-
-  IF lv_rc >= 1.
-    p_gpath = lt_filetab[ 1 ]-filename.
-  ENDIF.
-
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
+FORM select_script_file.
   DATA: lt_filetab TYPE filetable,
         lv_rc      TYPE i.
 
@@ -154,6 +134,34 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
   IF lv_rc >= 1.
     p_spath = lt_filetab[ 1 ]-filename.
   ENDIF.
+ENDFORM.
+
+FORM select_script_file.
+  DATA: lt_filetab TYPE filetable,
+        lv_rc      TYPE i.
+
+  cl_gui_frontend_services=>file_open_dialog(
+    EXPORTING
+      window_title      = 'Select Z-Machine Story File'
+      file_filter       = 'Z-Machine (*.z3;*.z5;*.z8)|*.z3;*.z5;*.z8|All (*.*)|*.*'
+      default_extension = 'z3'
+    CHANGING
+      file_table        = lt_filetab
+      rc                = lv_rc ).
+
+  IF lv_rc >= 1.
+    p_gpath = lt_filetab[ 1 ]-filename.
+  ENDIF.
+ENDFORM.
+
+*----------------------------------------------------------------------*
+* At Selection Screen - F4 Help for file paths
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
+  PERFORM select_script_file.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
+  PERFORM select_script_file.
 
 
 START-OF-SELECTION.
