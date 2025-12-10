@@ -136,10 +136,7 @@ FORM select_script_file.
   ENDIF.
 ENDFORM.
 
-*----------------------------------------------------------------------*
-* At Selection Screen - F4 Help for file paths
-*----------------------------------------------------------------------*
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
+FORM select_script_file.
   DATA: lt_filetab TYPE filetable,
         lv_rc      TYPE i.
 
@@ -155,9 +152,16 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
   IF lv_rc >= 1.
     p_gpath = lt_filetab[ 1 ]-filename.
   ENDIF.
+ENDFORM.
+
+*----------------------------------------------------------------------*
+* At Selection Screen - F4 Help for file paths
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
+  PERFORM select_script_file.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
-perform select_script_file.
+  PERFORM select_script_file.
 
 
 START-OF-SELECTION.
