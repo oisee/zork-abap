@@ -101,7 +101,9 @@ CLASS zcl_cpu_00_bus_simple IMPLEMENTATION.
     IF iv_addr = c_io_output.
       " Convert ASCII code to character
       DATA lv_char TYPE c LENGTH 1.
-      lv_char = cl_abap_conv_in_ce=>uccp( CONV #( lv_val ) ).
+      DATA lv_hex2 TYPE x LENGTH 2.
+      lv_hex2 = lv_val.
+      lv_char = cl_abap_conv_in_ce=>uccp( lv_hex2 ).
       mv_output_buf = mv_output_buf && lv_char.
       RETURN.
     ENDIF.
