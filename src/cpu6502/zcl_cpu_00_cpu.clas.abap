@@ -192,7 +192,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD push16.
-    push( iv_val DIV 256 ).
+    push( iv_val / 256 ).
     push( iv_val MOD 256 ).
   ENDMETHOD.
 
@@ -285,7 +285,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
     lv_ptr = read16( mv_pc ).
     mv_pc = mv_pc + 2.
     lv_lo = read( lv_ptr ).
-    lv_hi = read( ( lv_ptr MOD 256 + 1 ) MOD 256 + ( lv_ptr DIV 256 ) * 256 ).
+    lv_hi = read( ( lv_ptr MOD 256 + 1 ) MOD 256 + ( lv_ptr / 256 ) * 256 ).
     rv_addr = lv_lo + lv_hi * 256.
   ENDMETHOD.
 
@@ -349,7 +349,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
     lv_result = 0.
     lv_mask = 1.
     DO 8 TIMES.
-      IF ( mv_a DIV lv_mask ) MOD 2 = 1 AND ( iv_val DIV lv_mask ) MOD 2 = 1.
+      IF ( mv_a / lv_mask ) MOD 2 = 1 AND ( iv_val / lv_mask ) MOD 2 = 1.
         lv_result = lv_result + lv_mask.
       ENDIF.
       lv_mask = lv_mask * 2.
@@ -364,7 +364,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
     lv_result = 0.
     lv_mask = 1.
     DO 8 TIMES.
-      IF ( mv_a DIV lv_mask ) MOD 2 = 1 OR ( iv_val DIV lv_mask ) MOD 2 = 1.
+      IF ( mv_a / lv_mask ) MOD 2 = 1 OR ( iv_val / lv_mask ) MOD 2 = 1.
         lv_result = lv_result + lv_mask.
       ENDIF.
       lv_mask = lv_mask * 2.
@@ -379,7 +379,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
     lv_result = 0.
     lv_mask = 1.
     DO 8 TIMES.
-      IF ( ( mv_a DIV lv_mask ) MOD 2 + ( iv_val DIV lv_mask ) MOD 2 ) = 1.
+      IF ( ( mv_a / lv_mask ) MOD 2 + ( iv_val / lv_mask ) MOD 2 ) = 1.
         lv_result = lv_result + lv_mask.
       ENDIF.
       lv_mask = lv_mask * 2.
@@ -424,7 +424,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
     lv_result = 0.
     lv_mask = 1.
     DO 8 TIMES.
-      IF ( mv_a DIV lv_mask ) MOD 2 = 1 AND ( iv_val DIV lv_mask ) MOD 2 = 1.
+      IF ( mv_a / lv_mask ) MOD 2 = 1 AND ( iv_val / lv_mask ) MOD 2 = 1.
         lv_result = lv_result + lv_mask.
       ENDIF.
       lv_mask = lv_mask * 2.
@@ -455,7 +455,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
   METHOD op_lsr_a.
     DATA lv_result TYPE i.
     set_flag( iv_flag = c_flag_c iv_set = xsdbool( mv_a MOD 2 = 1 ) ).
-    lv_result = mv_a DIV 2.
+    lv_result = mv_a / 2.
     mv_a = lv_result.
     update_nz( mv_a ).
   ENDMETHOD.
@@ -465,7 +465,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
           lv_result TYPE i.
     lv_val = read( iv_addr ).
     set_flag( iv_flag = c_flag_c iv_set = xsdbool( lv_val MOD 2 = 1 ) ).
-    lv_result = lv_val DIV 2.
+    lv_result = lv_val / 2.
     write( iv_addr = iv_addr iv_val = lv_result ).
     update_nz( lv_result ).
   ENDMETHOD.
@@ -509,7 +509,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
       lv_carry = 0.
     ENDIF.
     set_flag( iv_flag = c_flag_c iv_set = xsdbool( mv_a MOD 2 = 1 ) ).
-    lv_result = mv_a DIV 2 + lv_carry.
+    lv_result = mv_a / 2 + lv_carry.
     mv_a = lv_result.
     update_nz( mv_a ).
   ENDMETHOD.
@@ -525,7 +525,7 @@ CLASS zcl_cpu_00_cpu IMPLEMENTATION.
       lv_carry = 0.
     ENDIF.
     set_flag( iv_flag = c_flag_c iv_set = xsdbool( lv_val MOD 2 = 1 ) ).
-    lv_result = lv_val DIV 2 + lv_carry.
+    lv_result = lv_val / 2 + lv_carry.
     write( iv_addr = iv_addr iv_val = lv_result ).
     update_nz( lv_result ).
   ENDMETHOD.
