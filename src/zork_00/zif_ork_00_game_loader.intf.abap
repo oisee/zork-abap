@@ -9,6 +9,7 @@ INTERFACE zif_ork_00_game_loader PUBLIC.
            description TYPE string,
            filesize    TYPE i,
            version     TYPE string,
+           filename    TYPE string,
          END OF ts_game_info,
          tt_game_list TYPE STANDARD TABLE OF ts_game_info WITH EMPTY KEY.
 

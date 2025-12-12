@@ -53,6 +53,8 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
             ls_game-filesize = ls_param-value.
           WHEN 'description'.
             ls_game-description = ls_param-value.
+          WHEN 'filename'.
+            ls_game-filename = ls_param-value.
         ENDCASE.
       ENDLOOP.
 
@@ -62,7 +64,7 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
       ENDIF.
 
       " Determine version from extension
-      DATA(lv_ext) = to_upper( ls_game-id ).
+      DATA(lv_ext) = to_upper( ls_game-filename ).
       IF lv_ext CS '.Z3'.
         ls_game-version = 'V3'.
       ELSEIF lv_ext CS '.Z4'.
