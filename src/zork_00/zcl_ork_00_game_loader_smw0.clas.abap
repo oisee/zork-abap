@@ -9,7 +9,7 @@ CLASS zcl_ork_00_game_loader_smw0 DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     " Constructor with optional pattern filter
     METHODS constructor
-      IMPORTING iv_pattern TYPE string DEFAULT '*.Z*'.
+      IMPORTING iv_pattern TYPE string DEFAULT '*-Z*'.
 
   PRIVATE SECTION.
     DATA mv_pattern TYPE string.

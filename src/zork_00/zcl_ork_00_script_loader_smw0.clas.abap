@@ -9,7 +9,7 @@ CLASS zcl_ork_00_script_loader_smw0 DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     " Constructor with optional pattern filter
     METHODS constructor
-      IMPORTING iv_pattern TYPE string DEFAULT '*.TXT'.
+      IMPORTING iv_pattern TYPE string DEFAULT '*-TXT'.
 
   PRIVATE SECTION.
     DATA mv_pattern TYPE string.
