@@ -119,7 +119,9 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CONCATENATE LINES OF lt_mime INTO rv_story IN BYTE MODE.
+    LOOP AT lt_mime INTO DATA(ls_mime).
+      CONCATENATE rv_story ls_mime-line INTO rv_story IN BYTE MODE.
+    ENDLOOP.
     rv_story = rv_story(lv_size).
 
   ENDMETHOD.

@@ -112,7 +112,7 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
 
 
   METHOD load_text.
-    DATA: lt_mime   TYPE w3mimetabtype,
+    DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
           ls_key    TYPE wwwdatatab,
           lt_params TYPE STANDARD TABLE OF wwwparams,
           ls_param  TYPE wwwparams,
@@ -146,7 +146,9 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CONCATENATE LINES OF lt_mime INTO lv_xstr IN BYTE MODE.
+    LOOP AT lt_mime INTO DATA(ls_mime).
+      CONCATENATE lv_xstr ls_mime-line INTO lv_xstr IN BYTE MODE.
+    ENDLOOP.
     lv_xstr = lv_xstr(lv_size).
 
     " Convert xstring to string (UTF-8)
