@@ -59,7 +59,7 @@ ENDFORM.
 
 FORM load_story CHANGING cv_story TYPE xstring.
   " Load ZORK.Z3 from SMW0 ($ZORK package)
-  DATA: lt_mime   TYPE w3mimetabtype,
+  DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
         ls_key    TYPE wwwdatatab,
         lt_params TYPE STANDARD TABLE OF wwwparams,
         ls_param  TYPE wwwparams,

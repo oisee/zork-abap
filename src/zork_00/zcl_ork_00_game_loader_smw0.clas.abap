@@ -86,7 +86,7 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
 
 
   METHOD zif_ork_00_game_loader~load.
-    DATA: lt_mime   TYPE w3mimetabtype,
+    DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
           ls_key    TYPE wwwdatatab,
           lt_params TYPE STANDARD TABLE OF wwwparams,
           ls_param  TYPE wwwparams,
