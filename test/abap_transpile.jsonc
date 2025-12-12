@@ -1,5 +1,5 @@
 {
-  "input_folder": ["src/zork_00"],
+  "input_folder": ["src/zork_00", "src/zork_02"],
   "input_filter": [],
   "output_folder": "output",
   "libs": [

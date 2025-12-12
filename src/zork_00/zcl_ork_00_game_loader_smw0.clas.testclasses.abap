@@ -55,7 +55,7 @@ CLASS ltcl_game_loader_smw0 IMPLEMENTATION.
 
   METHOD test_load_zork_mini.
     " Test loading ZORK-MINI.Z3
-    DATA(lv_story) = mo_cut->zif_ork_00_game_loader~load( 'ZORK-MINI.Z3' ).
+    DATA(lv_story) = mo_cut->zif_ork_00_game_loader~load( 'ZORK-MINI-Z3' ).
 
     " Should return binary data
     cl_abap_unit_assert=>assert_not_initial(

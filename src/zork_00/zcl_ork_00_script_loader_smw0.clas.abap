@@ -9,7 +9,7 @@ CLASS zcl_ork_00_script_loader_smw0 DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     " Constructor with optional pattern filter
     METHODS constructor
-      IMPORTING iv_pattern TYPE string DEFAULT '*.TXT'.
+      IMPORTING iv_pattern TYPE string DEFAULT '*-TXT'.
 
   PRIVATE SECTION.
     DATA mv_pattern TYPE string.
@@ -112,7 +112,7 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
 
 
   METHOD load_text.
-    DATA: lt_mime   TYPE w3mimetabtype,
+    DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
           ls_key    TYPE wwwdatatab,
           lt_params TYPE STANDARD TABLE OF wwwparams,
           ls_param  TYPE wwwparams,
@@ -146,10 +146,10 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING input_length = lv_size
-      IMPORTING buffer       = lv_xstr
-      TABLES    binary_tab   = lt_mime.
+    LOOP AT lt_mime INTO DATA(ls_mime).
+      CONCATENATE lv_xstr ls_mime-line INTO lv_xstr IN BYTE MODE.
+    ENDLOOP.
+    lv_xstr = lv_xstr(lv_size).
 
     " Convert xstring to string (UTF-8)
     rv_text = cl_abap_codepage=>convert_from( lv_xstr ).

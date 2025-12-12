@@ -17,9 +17,9 @@
   },
   "homepage": "https://github.com/oisee/zork-abap#readme",
   "devDependencies": {
-    "@abaplint/cli": "^2.114.8",
-    "@abaplint/runtime": "^2.12.18",
+    "@abaplint/cli": "^2.114.10",
+    "@abaplint/runtime": "^2.12.22",
     "@abaplint/database-sqlite": "^2.11.78",
-    "@abaplint/transpiler-cli": "^2.12.18"
+    "@abaplint/transpiler-cli": "^2.12.22"
   }
 }

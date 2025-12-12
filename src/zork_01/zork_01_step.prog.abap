@@ -59,7 +59,7 @@ ENDFORM.
 
 FORM load_story CHANGING cv_story TYPE xstring.
   " Load ZORK.Z3 from SMW0 ($ZORK package)
-  DATA: lt_mime   TYPE w3mimetabtype,
+  DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
         ls_key    TYPE wwwdatatab,
         lt_params TYPE STANDARD TABLE OF wwwparams,
         ls_param  TYPE wwwparams,
@@ -82,19 +82,22 @@ FORM load_story CHANGING cv_story TYPE xstring.
   ENDIF.
 
   CALL FUNCTION 'WWWDATA_IMPORT'
-    EXPORTING key  = ls_key
-    TABLES    mime = lt_mime
-    EXCEPTIONS OTHERS = 1.
+    EXPORTING
+      key    = ls_key
+    TABLES
+      mime   = lt_mime
+    EXCEPTIONS
+      OTHERS = 1.
 
   IF sy-subrc <> 0.
     WRITE: / 'Error loading ZORK.Z3'.
     RETURN.
   ENDIF.
 
-  CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-    EXPORTING input_length = lv_size
-    IMPORTING buffer       = cv_story
-    TABLES    binary_tab   = lt_mime.
+  LOOP AT lt_mime INTO DATA(ls_mime).
+    CONCATENATE cv_story ls_mime-line INTO cv_story IN BYTE MODE.
+  ENDLOOP.
+  cv_story = cv_story(lv_size).
 
   WRITE: / 'Loaded ZORK.Z3,', lv_size, 'bytes'.
 ENDFORM.

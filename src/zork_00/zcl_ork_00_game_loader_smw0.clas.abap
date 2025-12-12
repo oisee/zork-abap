@@ -9,7 +9,7 @@ CLASS zcl_ork_00_game_loader_smw0 DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     " Constructor with optional pattern filter
     METHODS constructor
-      IMPORTING iv_pattern TYPE string DEFAULT '*.Z*'.
+      IMPORTING iv_pattern TYPE string DEFAULT '*-Z*'.
 
   PRIVATE SECTION.
     DATA mv_pattern TYPE string.
@@ -53,6 +53,8 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
             ls_game-filesize = ls_param-value.
           WHEN 'description'.
             ls_game-description = ls_param-value.
+          WHEN 'filename'.
+            ls_game-filename = ls_param-value.
         ENDCASE.
       ENDLOOP.
 
@@ -62,7 +64,7 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
       ENDIF.
 
       " Determine version from extension
-      DATA(lv_ext) = to_upper( ls_game-id ).
+      DATA(lv_ext) = to_upper( ls_game-filename ).
       IF lv_ext CS '.Z3'.
         ls_game-version = 'V3'.
       ELSEIF lv_ext CS '.Z4'.
@@ -84,7 +86,7 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
 
 
   METHOD zif_ork_00_game_loader~load.
-    DATA: lt_mime   TYPE w3mimetabtype,
+    DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
           ls_key    TYPE wwwdatatab,
           lt_params TYPE STANDARD TABLE OF wwwparams,
           ls_param  TYPE wwwparams,
@@ -117,10 +119,11 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING input_length = lv_size
-      IMPORTING buffer       = rv_story
-      TABLES    binary_tab   = lt_mime.
+    LOOP AT lt_mime INTO DATA(ls_mime).
+      CONCATENATE rv_story ls_mime-line INTO rv_story IN BYTE MODE.
+    ENDLOOP.
+    rv_story = rv_story(lv_size).
+
   ENDMETHOD.
 
 ENDCLASS.

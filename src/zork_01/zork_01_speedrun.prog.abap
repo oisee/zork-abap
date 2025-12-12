@@ -136,7 +136,7 @@ FORM select_script_file.
   ENDIF.
 ENDFORM.
 
-FORM select_script_file.
+FORM select_story_file.
   DATA: lt_filetab TYPE filetable,
         lv_rc      TYPE i.
 
@@ -158,7 +158,7 @@ ENDFORM.
 * At Selection Screen - F4 Help for file paths
 *----------------------------------------------------------------------*
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
-  PERFORM select_script_file.
+  PERFORM select_story_file.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
   PERFORM select_script_file.
