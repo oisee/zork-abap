@@ -49,42 +49,47 @@ CLASS ltcl_memory IMPLEMENTATION.
     "   28-29: checksum
 
     DATA lv_data TYPE xstring.
-    " 128 bytes of zeros
-    lv_data = repeat( val = '00' occ = 128 ).
+    DATA lv_hex TYPE string.
+
+    " 128 bytes of zeros (256 hex chars)
+    lv_hex = repeat( val = `00` occ = 128 ).
 
     " Set version = 3 at offset 0
-    lv_data = '03' && lv_data+2.
+    lv_hex = `03` && lv_hex+2.
 
     " Set flags1 = 0 at offset 1 (already 0)
 
     " Set high_mem = 0x0080 at offset 4-5
-    lv_data = lv_data+0(8) && '0080' && lv_data+12.
+    lv_hex = lv_hex+0(8) && `0080` && lv_hex+12.
 
     " Set initial_pc = 0x0040 at offset 6-7
-    lv_data = lv_data+0(12) && '0040' && lv_data+16.
+    lv_hex = lv_hex+0(12) && `0040` && lv_hex+16.
 
     " Set dict_addr = 0x0060 at offset 8-9
-    lv_data = lv_data+0(16) && '0060' && lv_data+20.
+    lv_hex = lv_hex+0(16) && `0060` && lv_hex+20.
 
     " Set obj_addr = 0x0050 at offset 10-11
-    lv_data = lv_data+0(20) && '0050' && lv_data+24.
+    lv_hex = lv_hex+0(20) && `0050` && lv_hex+24.
 
     " Set globals_addr = 0x0070 at offset 12-13
-    lv_data = lv_data+0(24) && '0070' && lv_data+28.
+    lv_hex = lv_hex+0(24) && `0070` && lv_hex+28.
 
     " Set static_mem = 0x0080 at offset 14-15
-    lv_data = lv_data+0(28) && '0080' && lv_data+32.
+    lv_hex = lv_hex+0(28) && `0080` && lv_hex+32.
 
     " Set serial "123456" at offset 18-23 (ASCII: 31 32 33 34 35 36)
-    lv_data = lv_data+0(36) && '313233343536' && lv_data+48.
+    lv_hex = lv_hex+0(36) && `313233343536` && lv_hex+48.
 
     " Set abbrev_addr = 0x0030 at offset 24-25
-    lv_data = lv_data+0(48) && '0030' && lv_data+52.
+    lv_hex = lv_hex+0(48) && `0030` && lv_hex+52.
 
     " Set file_len = 64 (0x0040) at offset 26-27 -> actual = 128 bytes
-    lv_data = lv_data+0(52) && '0040' && lv_data+56.
+    lv_hex = lv_hex+0(52) && `0040` && lv_hex+56.
 
     " Set checksum = 0 at offset 28-29 (already 0)
+
+    " Convert hex string to xstring
+    lv_data = lv_hex.
 
     rv_data = lv_data.
   ENDMETHOD.
