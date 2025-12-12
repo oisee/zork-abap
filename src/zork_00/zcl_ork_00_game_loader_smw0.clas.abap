@@ -119,10 +119,9 @@ CLASS zcl_ork_00_game_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING input_length = lv_size
-      IMPORTING buffer       = rv_story
-      TABLES    binary_tab   = lt_mime.
+    CONCATENATE LINES OF lt_mime INTO rv_story IN BYTE MODE.
+    rv_story = rv_story(lv_size).
+
   ENDMETHOD.
 
 ENDCLASS.

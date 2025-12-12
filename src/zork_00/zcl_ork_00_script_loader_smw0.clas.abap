@@ -146,10 +146,8 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING input_length = lv_size
-      IMPORTING buffer       = lv_xstr
-      TABLES    binary_tab   = lt_mime.
+    CONCATENATE LINES OF lt_mime INTO lv_xstr IN BYTE MODE.
+    lv_xstr = lv_xstr(lv_size).
 
     " Convert xstring to string (UTF-8)
     rv_text = cl_abap_codepage=>convert_from( lv_xstr ).

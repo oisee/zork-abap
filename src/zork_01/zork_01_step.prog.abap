@@ -91,10 +91,8 @@ FORM load_story CHANGING cv_story TYPE xstring.
     RETURN.
   ENDIF.
 
-  CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-    EXPORTING input_length = lv_size
-    IMPORTING buffer       = cv_story
-    TABLES    binary_tab   = lt_mime.
+  CONCATENATE LINES OF lt_mime INTO cv_story IN BYTE MODE.
+  cv_story = cv_story(lv_size).
 
   WRITE: / 'Loaded ZORK.Z3,', lv_size, 'bytes'.
 ENDFORM.
