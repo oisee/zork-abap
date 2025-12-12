@@ -194,7 +194,7 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
     DATA lv_opcode TYPE i.
     DATA lv_op_type TYPE i.
     DATA lv_op_num TYPE i.
-    DATA lt_operands TYPE int4_table.
+    DATA lt_operands TYPE ty_int4_table.
     DATA lv_form TYPE string.
 
     IF mv_waiting = abap_true OR mv_running = abap_false.
