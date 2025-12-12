@@ -16,7 +16,7 @@ CLASS ltcl_speedrun IMPLEMENTATION.
   METHOD test_speedrun_zork_mini.
     " Load ZORK-MINI.Z3 and run speedrun script
     DATA(lo_game_loader) = NEW zcl_ork_00_game_loader_smw0( ).
-    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI.Z3' ).
+    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI-Z3' ).
 
     cl_abap_unit_assert=>assert_not_initial(
       act = lv_story
@@ -24,7 +24,7 @@ CLASS ltcl_speedrun IMPLEMENTATION.
 
     " Load speedrun script
     DATA(lo_script_loader) = NEW zcl_ork_00_script_loader_smw0( ).
-    DATA(lt_commands) = lo_script_loader->zif_ork_00_script_loader~load( 'ZORK-MINI-SPEEDRUN.TXT' ).
+    DATA(lt_commands) = lo_script_loader->zif_ork_00_script_loader~load( 'ZORK-MINI-SPEEDRUN-TXT' ).
 
     cl_abap_unit_assert=>assert_not_initial(
       act = lt_commands
@@ -57,11 +57,11 @@ CLASS ltcl_speedrun IMPLEMENTATION.
   METHOD test_speedrun_with_assertions.
     " Load ZORK-MINI.Z3 and run test script with assertions
     DATA(lo_game_loader) = NEW zcl_ork_00_game_loader_smw0( ).
-    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI.Z3' ).
+    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI-Z3' ).
 
     " Load test script (with assertions)
     DATA(lo_script_loader) = NEW zcl_ork_00_script_loader_smw0( ).
-    DATA(lt_commands) = lo_script_loader->zif_ork_00_script_loader~load( 'ZORK-MINI-TEST.TXT' ).
+    DATA(lt_commands) = lo_script_loader->zif_ork_00_script_loader~load( 'ZORK-MINI-TEST-TXT' ).
 
     cl_abap_unit_assert=>assert_not_initial(
       act = lt_commands
@@ -119,7 +119,7 @@ CLASS ltcl_speedrun IMPLEMENTATION.
   METHOD test_empty_script.
     " Test with empty script
     DATA(lo_game_loader) = NEW zcl_ork_00_game_loader_smw0( ).
-    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI.Z3' ).
+    DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI-Z3' ).
 
     DATA: lt_commands TYPE zif_ork_00_script_loader=>tt_commands.
 

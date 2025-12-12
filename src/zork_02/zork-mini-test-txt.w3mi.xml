@@ -2,20 +2,20 @@
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_W3MI" serializer_version="v2.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
-   <NAME>ZDUCKME.Z3</NAME>
-   <TEXT>ZDUCKME.Z3</TEXT>
+   <NAME>ZORK-MINI-TEST-TXT</NAME>
+   <TEXT>ZORK-MINI-TEST.TXT</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <NAME>fileextension</NAME>
-     <VALUE>.z3</VALUE>
+     <VALUE>.TXT</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <NAME>filename</NAME>
-     <VALUE>DuckMe.z3</VALUE>
+     <VALUE>MINIZORK_TEST.TXT</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <NAME>mimetype</NAME>
-     <VALUE>application/octet-stream</VALUE>
+     <VALUE>text/plain</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

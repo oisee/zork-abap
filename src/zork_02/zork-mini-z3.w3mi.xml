@@ -2,20 +2,20 @@
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_W3MI" serializer_version="v2.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
-   <NAME>ZORK-MINI-SPEEDRUN.TXT</NAME>
-   <TEXT>ZORK-MINI-SPEEDRUN.TXT</TEXT>
+   <NAME>ZORK-MINI-Z3</NAME>
+   <TEXT>zork.z3</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <NAME>fileextension</NAME>
-     <VALUE>.TXT</VALUE>
+     <VALUE>.z3</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <NAME>filename</NAME>
-     <VALUE>MINIZORK_SPEEDRUN.TXT</VALUE>
+     <VALUE>minizork.z3</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <NAME>mimetype</NAME>
-     <VALUE>text/plain</VALUE>
+     <VALUE>application/octet-stream</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

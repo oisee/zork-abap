@@ -47,7 +47,7 @@ CLASS ltcl_script_loader_smw0 IMPLEMENTATION.
 
   METHOD test_load_speedrun_script.
     " Test loading speedrun script
-    DATA(lt_commands) = mo_cut->zif_ork_00_script_loader~load( 'ZORK-MINI-SPEEDRUN.TXT' ).
+    DATA(lt_commands) = mo_cut->zif_ork_00_script_loader~load( 'ZORK-MINI-SPEEDRUN-TXT' ).
 
     " Should return commands
     cl_abap_unit_assert=>assert_not_initial(
@@ -63,7 +63,7 @@ CLASS ltcl_script_loader_smw0 IMPLEMENTATION.
 
   METHOD test_load_test_script.
     " Test loading test script with assertions
-    DATA(lt_commands) = mo_cut->zif_ork_00_script_loader~load( 'ZORK-MINI-TEST.TXT' ).
+    DATA(lt_commands) = mo_cut->zif_ork_00_script_loader~load( 'ZORK-MINI-TEST-TXT' ).
 
     " Should return commands
     cl_abap_unit_assert=>assert_not_initial(
