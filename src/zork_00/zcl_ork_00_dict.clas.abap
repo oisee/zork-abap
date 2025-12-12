@@ -211,12 +211,10 @@ CLASS zcl_ork_00_dict IMPLEMENTATION.
           lv_parse_addr = lv_parse_addr + 4.
           lv_num_words = lv_num_words + 1.
         ENDIF.
-      ELSE.
+      ELSEIF lv_in_word = abap_false.
         " Regular character - start or continue word
-        IF lv_in_word = abap_false.
-          lv_word_start = lv_i.
-          lv_in_word = abap_true.
-        ENDIF.
+        lv_word_start = lv_i.
+        lv_in_word = abap_true.
       ENDIF.
 
       lv_i = lv_i + 1.
