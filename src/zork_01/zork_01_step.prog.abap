@@ -82,16 +82,21 @@ FORM load_story CHANGING cv_story TYPE xstring.
   ENDIF.
 
   CALL FUNCTION 'WWWDATA_IMPORT'
-    EXPORTING key  = ls_key
-    TABLES    mime = lt_mime
-    EXCEPTIONS OTHERS = 1.
+    EXPORTING
+      key    = ls_key
+    TABLES
+      mime   = lt_mime
+    EXCEPTIONS
+      OTHERS = 1.
 
   IF sy-subrc <> 0.
     WRITE: / 'Error loading ZORK.Z3'.
     RETURN.
   ENDIF.
 
-  CONCATENATE LINES OF lt_mime INTO cv_story IN BYTE MODE.
+  LOOP AT lt_mime INTO DATA(ls_mime).
+    CONCATENATE cv_story ls_mime-line INTO cv_story IN BYTE MODE.
+  ENDLOOP.
   cv_story = cv_story(lv_size).
 
   WRITE: / 'Loaded ZORK.Z3,', lv_size, 'bytes'.
