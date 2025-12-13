@@ -10,35 +10,10 @@ CLASS ltcl_text DEFINITION FINAL FOR TESTING
     METHODS test_encode_uppercase FOR TESTING.
     METHODS test_alphabet_constants FOR TESTING.
     METHODS test_decode_with_story FOR TESTING.
-
-    METHODS create_memory_for_text
-      IMPORTING iv_zchars TYPE xstring
-      RETURNING VALUE(ro_mem) TYPE REF TO zcl_ork_00_memory.
 ENDCLASS.
 
 
 CLASS ltcl_text IMPLEMENTATION.
-
-  METHOD create_memory_for_text.
-    " Create a minimal V3 memory with abbreviation table
-    " Abbrev table at 0x30, no abbreviations defined
-    DATA lv_data TYPE xstring.
-    DATA lv_hex TYPE string.
-
-    " 256 bytes of zeros (512 hex chars)
-    lv_hex = repeat( val = `00` occ = 256 ).
-
-    " Version = 3 at offset 0
-    lv_hex = `03` && lv_hex+2.
-
-    " Set abbrev_addr at offset 24-25 to 0x0030
-    lv_hex = lv_hex+0(48) && `0030` && lv_hex+52.
-
-    " Convert hex string to xstring
-    lv_data = lv_hex.
-
-    ro_mem = NEW zcl_ork_00_memory( lv_data ).
-  ENDMETHOD.
 
   METHOD test_alphabet_constants.
     " Verify alphabet constants are correct

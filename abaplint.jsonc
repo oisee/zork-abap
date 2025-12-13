@@ -39,6 +39,13 @@
     "method_implemented_twice": true,
     "parser_error": true,
     "local_testclass_consistency": true,
+    "whitespace_end": true,
+    "when_others_last": true,
+    "sy_modification": true,
+    "unused_macros": true,
+    "unused_ddic": true,
+    "unused_methods": true,
+    "unused_types": true,
     "superclass_final": true,
     "unknown_types": true,
     "xml_consistency": true
