@@ -189,7 +189,7 @@ CLASS ltcl_text IMPLEMENTATION.
     DATA(lo_game_loader) = NEW zcl_ork_00_game_loader_smw0( ).
 
     TRY.
-        DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI.Z3' ).
+        DATA(lv_story) = lo_game_loader->zif_ork_00_game_loader~load( 'ZORK-MINI-Z3' ).
       CATCH cx_root.
         " Skip test if story not available
         RETURN.
