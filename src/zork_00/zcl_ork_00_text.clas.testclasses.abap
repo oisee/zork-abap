@@ -178,6 +178,10 @@ CLASS ltcl_text IMPLEMENTATION.
     DATA(lo_memory) = NEW zcl_ork_00_memory( lv_story ).
     DATA(lo_text) = NEW zcl_ork_00_text( lo_memory ).
 
+    cl_abap_unit_assert=>assert_equals(
+      exp = 52216
+      act = lo_memory->mem_size ).
+
     " Decode text at initial PC (usually has some intro text)
     DATA lv_text TYPE string.
     DATA lv_len TYPE i.
