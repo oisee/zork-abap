@@ -200,6 +200,14 @@ CLASS ltcl_text IMPLEMENTATION.
         act = lv_len
         msg = 'Should decode some bytes from dictionary' ).
     ENDIF.
+
+    lo_text->decode(
+      EXPORTING iv_addr = 51976
+      IMPORTING ev_text = lv_text ev_len = lv_len ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = |In the bird's nest is a large egg encrusted with precious jewels, apparently scavenged by a childless songbird.|
+      act = lv_text ).
+
   ENDMETHOD.
 
   METHOD test_decode_multiline.
