@@ -1,6 +1,6 @@
 *"* use this source file for your ABAP unit test classes
 CLASS ltcl_zmachine DEFINITION FINAL FOR TESTING
-  DURATION MEDIUM
+  DURATION SHORT
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
