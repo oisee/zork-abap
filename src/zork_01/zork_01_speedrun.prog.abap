@@ -52,7 +52,7 @@ INITIALIZATION.
         ls_value         TYPE vrm_value.
 
   " Populate game dropdown (*.Z*)
-  lo_game_loader = NEW zcl_ork_00_game_loader_smw0( '*.Z*' ).
+  lo_game_loader = NEW zcl_ork_00_game_loader_smw0( '*-Z*' ).
   DATA(lt_games) = lo_game_loader->zif_ork_00_game_loader~list_games( ).
 
   CLEAR lt_values.
@@ -72,7 +72,7 @@ INITIALIZATION.
   ENDIF.
 
   " Populate script dropdown (*.TXT)
-  lo_script_loader = NEW zcl_ork_00_script_loader_smw0( '*.TXT' ).
+  lo_script_loader = NEW zcl_ork_00_script_loader_smw0( '*-TXT' ).
   DATA(lt_scripts) = lo_script_loader->zif_ork_00_script_loader~list_scripts( ).
 
   CLEAR lt_values.
