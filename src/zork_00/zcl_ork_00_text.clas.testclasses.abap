@@ -10,6 +10,7 @@ CLASS ltcl_text DEFINITION FINAL FOR TESTING
     METHODS test_encode_uppercase FOR TESTING.
     METHODS test_alphabet_constants FOR TESTING.
     METHODS test_decode_with_story FOR TESTING.
+    METHODS test_decode_multiline FOR TESTING.
 ENDCLASS.
 
 
@@ -199,6 +200,83 @@ CLASS ltcl_text IMPLEMENTATION.
         act = lv_len
         msg = 'Should decode some bytes from dictionary' ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD test_decode_multiline.
+    " Test decoding Z-string with newlines (multi-line text)
+    " Newlines in Z-machine: A2 shift (z-char 5), then z-char 7 (index 1 in A2)
+    "
+    " Encode "a^b" where ^ is newline:
+    "   'a' = z-char 6 (A0 index 0)
+    "   shift to A2 = z-char 5
+    "   newline (A2 index 1) = z-char 7
+    "   'b' = z-char 7 (A0 index 1)
+    "   padding = z-char 5
+    "   padding = z-char 5
+    "
+    " Pack into words:
+    "   Word1: (6 << 10) | (5 << 5) | 7 = 6144 + 160 + 7 = 6311
+    "   Word2: 0x8000 | (7 << 10) | (5 << 5) | 5 = 32768 + 7168 + 160 + 5 = 40101
+    "
+    DATA lv_data TYPE xstring.
+    " Create minimal memory with version 3 header
+    lv_data = repeat( val = '00' occ = 128 ).
+    lv_data = '03' && lv_data+2.  " Version 3
+
+    " Place encoded z-string at offset 64 (0x40)
+    " Word1 = 6311 = 0x18A7, Word2 = 40101 = 0x9CA5
+    DATA(lv_word1_hi) = '18'.
+    DATA(lv_word1_lo) = 'A7'.
+    DATA(lv_word2_hi) = '9C'.
+    DATA(lv_word2_lo) = 'A5'.
+
+    " Insert at position 64 (bytes 128-131 in hex string = chars 128-135)
+    lv_data = lv_data(128) && lv_word1_hi && lv_word1_lo && lv_word2_hi && lv_word2_lo && lv_data+136.
+
+    DATA(lo_mem) = NEW zcl_ork_00_memory( lv_data ).
+    DATA(lo_text) = NEW zcl_ork_00_text( lo_mem ).
+
+    DATA lv_text TYPE string.
+    DATA lv_len TYPE i.
+
+    lo_text->decode(
+      EXPORTING iv_addr = 64
+      IMPORTING ev_text = lv_text ev_len = lv_len ).
+
+    " Should contain newline between 'a' and 'b'
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_len
+      exp = 4
+      msg = 'Should consume 4 bytes (2 words)' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lv_text
+      exp = 'a*b*'
+      msg = 'Should decode to "a" + newline + "b" + padding' ).
+
+    " Verify newline is present
+    DATA(lv_has_newline) = xsdbool( lv_text CS cl_abap_char_utilities=>newline ).
+    cl_abap_unit_assert=>assert_true(
+      act = lv_has_newline
+      msg = 'Decoded text should contain a newline character' ).
+
+    " Split and check parts
+    SPLIT lv_text AT cl_abap_char_utilities=>newline INTO TABLE DATA(lt_lines).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_lines )
+      exp = 2
+      msg = 'Should have 2 lines after split' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_lines[ 1 ]
+      exp = 'a'
+      msg = 'First line should be "a"' ).
+
+    " Second line starts with 'b' (may have trailing padding chars)
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lt_lines[ 2 ]
+      exp = 'b*'
+      msg = 'Second line should start with "b"' ).
   ENDMETHOD.
 
 ENDCLASS.
