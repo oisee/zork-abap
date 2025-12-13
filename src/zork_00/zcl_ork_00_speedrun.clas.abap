@@ -357,7 +357,7 @@ CLASS zcl_ork_00_speedrun IMPLEMENTATION.
         lv_pattern_lower = is_assertion-assert_pattern.
         TRANSLATE lv_output_lower TO LOWER CASE.
         TRANSLATE lv_pattern_lower TO LOWER CASE.
-        IF NOT ( lv_output_lower CS lv_pattern_lower ).
+        IF NOT lv_output_lower CS lv_pattern_lower.
           rv_pass = abap_true.
         ENDIF.
     ENDCASE.

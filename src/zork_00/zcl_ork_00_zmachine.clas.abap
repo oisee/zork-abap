@@ -277,7 +277,9 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
     ENDDO.
     mo_memory->w8( iv_addr = mv_read_text_buf + 1 + lv_len iv_val = 0 ).
 
-    mo_dict->tokenize( iv_text = lv_line iv_text_buf = mv_read_text_buf iv_parse_buf = mv_read_parse_buf ).
+    mo_dict->tokenize(
+      iv_text      = lv_line
+      iv_parse_buf = mv_read_parse_buf ).
     mv_waiting = abap_false.
   ENDMETHOD.
 

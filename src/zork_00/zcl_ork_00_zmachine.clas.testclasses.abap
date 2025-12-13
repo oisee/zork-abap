@@ -195,7 +195,6 @@ CLASS ltcl_zmachine IMPLEMENTATION.
     " Run to get initial output
     lo_zm->run( ).
     DATA(ls_status1) = lo_zm->get_status( ).
-    DATA(lv_output1) = ls_status1-output.
 
     IF ls_status1-waiting = abap_true.
       " Provide input and run again

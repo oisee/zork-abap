@@ -30,8 +30,7 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
 
 
   METHOD zif_ork_00_script_loader~list_scripts.
-    DATA: lt_params  TYPE STANDARD TABLE OF wwwparams,
-          ls_script  TYPE zif_ork_00_script_loader=>ts_script_info,
+    DATA: ls_script  TYPE zif_ork_00_script_loader=>ts_script_info,
           lv_pattern TYPE string.
 
     " Convert pattern for LIKE comparison
