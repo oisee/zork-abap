@@ -84,6 +84,7 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Split into lines
+    REPLACE ALL OCCURRENCES OF |\r| IN lv_text WITH ''.
     SPLIT lv_text AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
 
     " Each line is a command (skip empty lines and comments)
