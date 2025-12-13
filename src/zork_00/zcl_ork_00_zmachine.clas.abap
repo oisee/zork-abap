@@ -557,7 +557,8 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
           set_var( iv_var = lv_store iv_val = 0 ).
         ELSE.
           DATA lv_random TYPE i.
-          CALL FUNCTION 'GENERAL_GET_RANDOM_INT' EXPORTING range = lv_range IMPORTING random = lv_random.
+          lv_random = cl_abap_random_int=>create( min = 1 max = lv_range )->get_next( ).
+"          CALL FUNCTION 'GENERAL_GET_RANDOM_INT' EXPORTING range = lv_range IMPORTING random = lv_random.
           set_var( iv_var = lv_store iv_val = lv_random ).
         ENDIF.
       WHEN 8. mo_stack->push( it_ops[ 1 ] ).
