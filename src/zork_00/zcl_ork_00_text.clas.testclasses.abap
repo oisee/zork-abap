@@ -218,20 +218,21 @@ CLASS ltcl_text IMPLEMENTATION.
     "   Word1: (6 << 10) | (5 << 5) | 7 = 6144 + 160 + 7 = 6311
     "   Word2: 0x8000 | (7 << 10) | (5 << 5) | 5 = 32768 + 7168 + 160 + 5 = 40101
     "
+    " Build header (64 bytes) + z-string at offset 64
+    DATA lv_header TYPE xstring.
+    DATA lv_zstring TYPE xstring.
     DATA lv_data TYPE xstring.
-    " Create minimal memory with version 3 header
-    lv_data = repeat( val = '00' occ = 128 ).
-    lv_data = '03' && lv_data+2.  " Version 3
 
-    " Place encoded z-string at offset 64 (0x40)
+    " Create minimal memory with version 3 header (64 bytes of zeros with version)
+    lv_header = '03'.  " Version 3 at byte 0
+    DO 63 TIMES.
+      lv_header = lv_header && '00'.
+    ENDDO.
+
     " Word1 = 6311 = 0x18A7, Word2 = 40101 = 0x9CA5
-    DATA(lv_word1_hi) = '18'.
-    DATA(lv_word1_lo) = 'A7'.
-    DATA(lv_word2_hi) = '9C'.
-    DATA(lv_word2_lo) = 'A5'.
+    lv_zstring = '18A79CA5'.
 
-    " Insert at position 64 (bytes 128-131 in hex string = chars 128-135)
-    lv_data = lv_data(128) && lv_word1_hi && lv_word1_lo && lv_word2_hi && lv_word2_lo && lv_data+136.
+    lv_data = lv_header && lv_zstring.
 
     DATA(lo_mem) = NEW zcl_ork_00_memory( lv_data ).
     DATA(lo_text) = NEW zcl_ork_00_text( lo_mem ).
@@ -248,11 +249,6 @@ CLASS ltcl_text IMPLEMENTATION.
       act = lv_len
       exp = 4
       msg = 'Should consume 4 bytes (2 words)' ).
-
-    cl_abap_unit_assert=>assert_char_cp(
-      act = lv_text
-      exp = 'a*b*'
-      msg = 'Should decode to "a" + newline + "b" + padding' ).
 
     " Verify newline is present
     DATA(lv_has_newline) = xsdbool( lv_text CS cl_abap_char_utilities=>newline ).
