@@ -18,7 +18,6 @@ CLASS zcl_ork_00_dict DEFINITION
     " Tokenize input text into parse buffer
     METHODS tokenize
       IMPORTING iv_text      TYPE string
-                iv_text_buf  TYPE i
                 iv_parse_buf TYPE i.
 
   PRIVATE SECTION.

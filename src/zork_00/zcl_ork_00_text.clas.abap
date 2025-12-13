@@ -59,7 +59,6 @@ CLASS zcl_ork_00_text IMPLEMENTATION.
           lv_alphabet  TYPE i,
           lv_abbrev    TYPE i,
           lv_zscii_hi  TYPE i,
-          lv_zscii_lo  TYPE i,
           lv_zscii     TYPE i,
           lv_start     TYPE i,
           lv_zc        TYPE i,
@@ -173,7 +172,6 @@ CLASS zcl_ork_00_text IMPLEMENTATION.
     DATA: lv_text TYPE string,
           lv_len  TYPE i,
           lv_ch   TYPE string,
-          lv_idx  TYPE i,
           lv_z1   TYPE i, lv_z2 TYPE i, lv_z3 TYPE i,
           lv_z4   TYPE i, lv_z5 TYPE i, lv_z6 TYPE i.
 
@@ -188,7 +186,6 @@ CLASS zcl_ork_00_text IMPLEMENTATION.
     " Convert each char to z-char (pad with 5)
     lv_z1 = 5. lv_z2 = 5. lv_z3 = 5. lv_z4 = 5. lv_z5 = 5. lv_z6 = 5.
 
-    DATA lv_zc TYPE i.
     DATA lv_pos TYPE i.
 
     IF lv_len >= 1.

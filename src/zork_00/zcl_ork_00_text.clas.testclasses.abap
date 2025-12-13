@@ -10,35 +10,11 @@ CLASS ltcl_text DEFINITION FINAL FOR TESTING
     METHODS test_encode_uppercase FOR TESTING.
     METHODS test_alphabet_constants FOR TESTING.
     METHODS test_decode_with_story FOR TESTING.
-
-    METHODS create_memory_for_text
-      IMPORTING iv_zchars TYPE xstring
-      RETURNING VALUE(ro_mem) TYPE REF TO zcl_ork_00_memory.
+    METHODS test_decode_multiline FOR TESTING.
 ENDCLASS.
 
 
 CLASS ltcl_text IMPLEMENTATION.
-
-  METHOD create_memory_for_text.
-    " Create a minimal V3 memory with abbreviation table
-    " Abbrev table at 0x30, no abbreviations defined
-    DATA lv_data TYPE xstring.
-    DATA lv_hex TYPE string.
-
-    " 256 bytes of zeros (512 hex chars)
-    lv_hex = repeat( val = `00` occ = 256 ).
-
-    " Version = 3 at offset 0
-    lv_hex = `03` && lv_hex+2.
-
-    " Set abbrev_addr at offset 24-25 to 0x0030
-    lv_hex = lv_hex+0(48) && `0030` && lv_hex+52.
-
-    " Convert hex string to xstring
-    lv_data = lv_hex.
-
-    ro_mem = NEW zcl_ork_00_memory( lv_data ).
-  ENDMETHOD.
 
   METHOD test_alphabet_constants.
     " Verify alphabet constants are correct
@@ -202,6 +178,10 @@ CLASS ltcl_text IMPLEMENTATION.
     DATA(lo_memory) = NEW zcl_ork_00_memory( lv_story ).
     DATA(lo_text) = NEW zcl_ork_00_text( lo_memory ).
 
+    cl_abap_unit_assert=>assert_equals(
+      exp = 52216
+      act = lo_memory->mem_size ).
+
     " Decode text at initial PC (usually has some intro text)
     DATA lv_text TYPE string.
     DATA lv_len TYPE i.
@@ -224,6 +204,87 @@ CLASS ltcl_text IMPLEMENTATION.
         act = lv_len
         msg = 'Should decode some bytes from dictionary' ).
     ENDIF.
+
+    lo_text->decode(
+      EXPORTING iv_addr = 51976
+      IMPORTING ev_text = lv_text ev_len = lv_len ).
+    cl_abap_unit_assert=>assert_equals(
+      exp = |In the bird's nest is a large egg encrusted with precious jewels, apparently scavenged by a childless songbird.|
+      act = lv_text ).
+
+  ENDMETHOD.
+
+  METHOD test_decode_multiline.
+    " Test decoding Z-string with newlines (multi-line text)
+    " Newlines in Z-machine: A2 shift (z-char 5), then z-char 7 (index 1 in A2)
+    "
+    " Encode "a^b" where ^ is newline:
+    "   'a' = z-char 6 (A0 index 0)
+    "   shift to A2 = z-char 5
+    "   newline (A2 index 1) = z-char 7
+    "   'b' = z-char 7 (A0 index 1)
+    "   padding = z-char 5
+    "   padding = z-char 5
+    "
+    " Pack into words:
+    "   Word1: (6 << 10) | (5 << 5) | 7 = 6144 + 160 + 7 = 6311
+    "   Word2: 0x8000 | (7 << 10) | (5 << 5) | 5 = 32768 + 7168 + 160 + 5 = 40101
+    "
+    " Build header (64 bytes) + z-string at offset 64
+    DATA lv_header TYPE xstring.
+    DATA lv_zstring TYPE xstring.
+    DATA lv_data TYPE xstring.
+
+    " Create minimal memory with version 3 header (64 bytes of zeros with version)
+    lv_header = '03'.  " Version 3 at byte 0
+    DO 63 TIMES.
+      lv_header = lv_header && '00'.
+    ENDDO.
+
+    " Word1 = 6311 = 0x18A7, Word2 = 40101 = 0x9CA5
+    lv_zstring = '18A79CA5'.
+
+    lv_data = lv_header && lv_zstring.
+
+    DATA(lo_mem) = NEW zcl_ork_00_memory( lv_data ).
+    DATA(lo_text) = NEW zcl_ork_00_text( lo_mem ).
+
+    DATA lv_text TYPE string.
+    DATA lv_len TYPE i.
+
+    lo_text->decode(
+      EXPORTING iv_addr = 64
+      IMPORTING ev_text = lv_text ev_len = lv_len ).
+
+    " Should contain newline between 'a' and 'b'
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_len
+      exp = 4
+      msg = 'Should consume 4 bytes (2 words)' ).
+
+    " Verify newline is present
+    DATA(lv_has_newline) = xsdbool( lv_text CS cl_abap_char_utilities=>newline ).
+    cl_abap_unit_assert=>assert_true(
+      act = lv_has_newline
+      msg = 'Decoded text should contain a newline character' ).
+
+    " Split and check parts
+    SPLIT lv_text AT cl_abap_char_utilities=>newline INTO TABLE DATA(lt_lines).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( lt_lines )
+      exp = 2
+      msg = 'Should have 2 lines after split' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_lines[ 1 ]
+      exp = 'a'
+      msg = 'First line should be "a"' ).
+
+    " Second line starts with 'b' (may have trailing padding chars)
+    cl_abap_unit_assert=>assert_char_cp(
+      act = lt_lines[ 2 ]
+      exp = 'b*'
+      msg = 'Second line should start with "b"' ).
   ENDMETHOD.
 
 ENDCLASS.

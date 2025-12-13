@@ -277,7 +277,9 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
     ENDDO.
     mo_memory->w8( iv_addr = mv_read_text_buf + 1 + lv_len iv_val = 0 ).
 
-    mo_dict->tokenize( iv_text = lv_line iv_text_buf = mv_read_text_buf iv_parse_buf = mv_read_parse_buf ).
+    mo_dict->tokenize(
+      iv_text      = lv_line
+      iv_parse_buf = mv_read_parse_buf ).
     mv_waiting = abap_false.
   ENDMETHOD.
 
@@ -554,8 +556,7 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
         IF lv_range <= 0.
           set_var( iv_var = lv_store iv_val = 0 ).
         ELSE.
-          DATA lv_random TYPE i.
-          CALL FUNCTION 'GENERAL_GET_RANDOM_INT' EXPORTING range = lv_range IMPORTING random = lv_random.
+          DATA(lv_random) = cl_abap_random_int=>create( min = 1 max = lv_range )->get_next( ).
           set_var( iv_var = lv_store iv_val = lv_random ).
         ENDIF.
       WHEN 8. mo_stack->push( it_ops[ 1 ] ).

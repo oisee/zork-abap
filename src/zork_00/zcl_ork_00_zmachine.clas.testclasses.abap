@@ -4,14 +4,14 @@ CLASS ltcl_zmachine DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    METHODS test_constructor FOR TESTING.
-    METHODS test_initial_status FOR TESTING.
-    METHODS test_step_runs FOR TESTING.
-    METHODS test_run_with_story FOR TESTING.
-    METHODS test_provide_input FOR TESTING.
-    METHODS test_empty_story FOR TESTING.
-    METHODS test_output_accumulation FOR TESTING.
-    METHODS test_status_clears_output FOR TESTING.
+    METHODS test_constructor FOR TESTING RAISING cx_static_check.
+    METHODS test_initial_status FOR TESTING RAISING cx_static_check.
+    METHODS test_step_runs FOR TESTING RAISING cx_static_check.
+    METHODS test_run_with_story FOR TESTING RAISING cx_static_check.
+    METHODS test_provide_input FOR TESTING RAISING cx_static_check.
+    METHODS test_empty_story FOR TESTING RAISING cx_static_check.
+    METHODS test_output_accumulation FOR TESTING RAISING cx_static_check.
+    METHODS test_status_clears_output FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -195,7 +195,6 @@ CLASS ltcl_zmachine IMPLEMENTATION.
     " Run to get initial output
     lo_zm->run( ).
     DATA(ls_status1) = lo_zm->get_status( ).
-    DATA(lv_output1) = ls_status1-output.
 
     IF ls_status1-waiting = abap_true.
       " Provide input and run again
