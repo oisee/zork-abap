@@ -18,6 +18,7 @@ CLASS zcl_ork_00_dict DEFINITION
     " Tokenize input text into parse buffer
     METHODS tokenize
       IMPORTING iv_text      TYPE string
+                iv_text_buf  TYPE i
                 iv_parse_buf TYPE i.
 
   PRIVATE SECTION.
@@ -210,10 +211,12 @@ CLASS zcl_ork_00_dict IMPLEMENTATION.
           lv_parse_addr = lv_parse_addr + 4.
           lv_num_words = lv_num_words + 1.
         ENDIF.
-      ELSEIF lv_in_word = abap_false.
+      ELSE.
         " Regular character - start or continue word
-        lv_word_start = lv_i.
-        lv_in_word = abap_true.
+        IF lv_in_word = abap_false.
+          lv_word_start = lv_i.
+          lv_in_word = abap_true.
+        ENDIF.
       ENDIF.
 
       lv_i = lv_i + 1.

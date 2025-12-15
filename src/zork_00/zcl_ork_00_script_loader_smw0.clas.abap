@@ -9,7 +9,7 @@ CLASS zcl_ork_00_script_loader_smw0 DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     " Constructor with optional pattern filter
     METHODS constructor
-      IMPORTING iv_pattern TYPE string DEFAULT '*-TXT'.
+      IMPORTING iv_pattern TYPE string DEFAULT '*.TXT'.
 
   PRIVATE SECTION.
     DATA mv_pattern TYPE string.
@@ -30,7 +30,8 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
 
 
   METHOD zif_ork_00_script_loader~list_scripts.
-    DATA: ls_script  TYPE zif_ork_00_script_loader=>ts_script_info,
+    DATA: lt_params  TYPE STANDARD TABLE OF wwwparams,
+          ls_script  TYPE zif_ork_00_script_loader=>ts_script_info,
           lv_pattern TYPE string.
 
     " Convert pattern for LIKE comparison
@@ -84,7 +85,6 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Split into lines
-    REPLACE ALL OCCURRENCES OF |\r| IN lv_text WITH ''.
     SPLIT lv_text AT cl_abap_char_utilities=>newline INTO TABLE lt_lines.
 
     " Each line is a command (skip empty lines and comments)
@@ -112,7 +112,7 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
 
 
   METHOD load_text.
-    DATA: lt_mime   TYPE STANDARD TABLE OF w3mime,
+    DATA: lt_mime   TYPE w3mimetabtype,
           ls_key    TYPE wwwdatatab,
           lt_params TYPE STANDARD TABLE OF wwwparams,
           ls_param  TYPE wwwparams,
@@ -146,10 +146,10 @@ CLASS zcl_ork_00_script_loader_smw0 IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    LOOP AT lt_mime INTO DATA(ls_mime).
-      CONCATENATE lv_xstr ls_mime-line INTO lv_xstr IN BYTE MODE.
-    ENDLOOP.
-    lv_xstr = lv_xstr(lv_size).
+    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+      EXPORTING input_length = lv_size
+      IMPORTING buffer       = lv_xstr
+      TABLES    binary_tab   = lt_mime.
 
     " Convert xstring to string (UTF-8)
     rv_text = cl_abap_codepage=>convert_from( lv_xstr ).

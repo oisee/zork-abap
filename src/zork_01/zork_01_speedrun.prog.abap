@@ -52,7 +52,7 @@ INITIALIZATION.
         ls_value         TYPE vrm_value.
 
   " Populate game dropdown (*.Z*)
-  lo_game_loader = NEW zcl_ork_00_game_loader_smw0( '*-Z*' ).
+  lo_game_loader = NEW zcl_ork_00_game_loader_smw0( '*.Z*' ).
   DATA(lt_games) = lo_game_loader->zif_ork_00_game_loader~list_games( ).
 
   CLEAR lt_values.
@@ -72,7 +72,7 @@ INITIALIZATION.
   ENDIF.
 
   " Populate script dropdown (*.TXT)
-  lo_script_loader = NEW zcl_ork_00_script_loader_smw0( '*-TXT' ).
+  lo_script_loader = NEW zcl_ork_00_script_loader_smw0( '*.TXT' ).
   DATA(lt_scripts) = lo_script_loader->zif_ork_00_script_loader~list_scripts( ).
 
   CLEAR lt_values.
@@ -118,25 +118,10 @@ AT SELECTION-SCREEN OUTPUT.
     ENDIF.
   ENDLOOP.
 
-FORM select_script_file.
-  DATA: lt_filetab TYPE filetable,
-        lv_rc      TYPE i.
-
-  cl_gui_frontend_services=>file_open_dialog(
-    EXPORTING
-      window_title      = 'Select Script File (commands)'
-      file_filter       = 'Text Files (*.txt)|*.txt|All (*.*)|*.*'
-      default_extension = 'txt'
-    CHANGING
-      file_table        = lt_filetab
-      rc                = lv_rc ).
-
-  IF lv_rc >= 1.
-    p_spath = lt_filetab[ 1 ]-filename.
-  ENDIF.
-ENDFORM.
-
-FORM select_story_file.
+*----------------------------------------------------------------------*
+* At Selection Screen - F4 Help for file paths
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
   DATA: lt_filetab TYPE filetable,
         lv_rc      TYPE i.
 
@@ -152,16 +137,23 @@ FORM select_story_file.
   IF lv_rc >= 1.
     p_gpath = lt_filetab[ 1 ]-filename.
   ENDIF.
-ENDFORM.
-
-*----------------------------------------------------------------------*
-* At Selection Screen - F4 Help for file paths
-*----------------------------------------------------------------------*
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_gpath.
-  PERFORM select_story_file.
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_spath.
-  PERFORM select_script_file.
+  DATA: lt_filetab TYPE filetable,
+        lv_rc      TYPE i.
+
+  cl_gui_frontend_services=>file_open_dialog(
+    EXPORTING
+      window_title      = 'Select Script File (commands)'
+      file_filter       = 'Text Files (*.txt)|*.txt|All (*.*)|*.*'
+      default_extension = 'txt'
+    CHANGING
+      file_table        = lt_filetab
+      rc                = lv_rc ).
+
+  IF lv_rc >= 1.
+    p_spath = lt_filetab[ 1 ]-filename.
+  ENDIF.
 
 
 START-OF-SELECTION.

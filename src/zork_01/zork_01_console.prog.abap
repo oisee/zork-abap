@@ -171,7 +171,9 @@ CLASS lcl_html_display IMPLEMENTATION.
 
   METHOD constructor.
     mv_max_lines = iv_max_lines.
-    mo_html_viewer = NEW #( parent = io_container ).
+    CREATE OBJECT mo_html_viewer
+      EXPORTING
+        parent = io_container.
   ENDMETHOD.
 
   METHOD set_max_lines.

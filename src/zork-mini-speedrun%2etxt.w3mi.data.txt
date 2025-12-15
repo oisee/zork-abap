@@ -1,0 +1,57 @@
+# MiniZork Speedrun Script
+# Upload to SMW0 as MINIZORK_SPEEDRUN.TXT
+
+# Initial exploration
+look
+north
+north
+
+# Get the egg from the tree
+climb tree
+take egg
+inventory
+down
+
+# Go to back of house
+south
+south
+east
+
+# Enter the house
+open window
+west
+take bottle
+
+# Living room - get items
+west
+take lamp
+take sword
+inventory
+
+# Open the cellar
+move rug
+open trapdoor
+turn on lamp
+down
+look
+
+# Fight the troll (multiple attempts - combat is random)
+north
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+
+# Explore beyond troll
+look
+east
+look
+north
+look
+
+# Check score
+score

@@ -90,9 +90,10 @@ CLASS zcl_ork_00_game_loader_file IMPLEMENTATION.
     ENDIF.
 
     " Convert to xstring
-    CONCATENATE LINES OF lt_data INTO rv_story IN BYTE MODE.
-    rv_story = rv_story(lv_len).
-
+    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+      EXPORTING input_length = lv_len
+      IMPORTING buffer       = rv_story
+      TABLES    binary_tab   = lt_data.
   ENDMETHOD.
 
 ENDCLASS.

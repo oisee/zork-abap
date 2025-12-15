@@ -2,4 +2,5 @@ PROCESS BEFORE OUTPUT.
   MODULE status_0100.
 
 PROCESS AFTER INPUT.
+  FIELD gv_input.
   MODULE user_command_0100.

@@ -1,0 +1,114 @@
+# MiniZork Unit Test Script
+# Upload to SMW0 as MINIZORK_TEST.TXT
+#
+# Syntax:
+#   command     - send command to game
+#   %*pattern*  - expect output containing pattern (wildcard)
+#   %=exact     - expect output containing exact text (case-sensitive)
+#   %!pattern   - expect output NOT containing pattern
+
+# Game should show intro
+%*MINI-ZORK*
+%*West of House*
+
+look
+%*white house*
+%*small mailbox*
+
+north
+%*North of House*
+
+north
+%*Forest*
+%*large tree*
+
+# Get the egg from the tree
+climb tree
+%*Up a Tree*
+%*nest*
+
+take egg
+%*Taken*
+
+inventory
+%*egg*
+
+down
+%*Forest*
+
+# Go to back of house
+south
+%*North of House*
+
+south
+%*windows*
+
+east
+%*Behind House*
+
+# Enter the house
+open window
+%*open*
+
+west
+%*Kitchen*
+%*bottle*
+
+# Living room - get items
+west
+%*Living Room*
+%*brass lantern*
+%*elvish sword*
+
+take lamp
+%*Taken*
+
+take sword
+%*Taken*
+
+inventory
+%*lantern*
+%*sword*
+
+# Open the cellar
+move rug
+%*trap door*
+
+open trapdoor
+%*open*
+
+turn on lamp
+%*lantern is now on*
+
+down
+%*Cellar*
+
+look
+%*Cellar*
+%*metal ramp*
+
+# Fight the troll
+north
+%*Troll*
+
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+kill troll with sword
+
+# Explore beyond
+look
+
+east
+look
+
+north
+look
+
+# Check score
+score
+%*score*

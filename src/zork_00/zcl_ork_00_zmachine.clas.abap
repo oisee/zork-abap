@@ -31,19 +31,18 @@ CLASS zcl_ork_00_zmachine DEFINITION PUBLIC FINAL CREATE PUBLIC.
     METHODS peek_var IMPORTING iv_var TYPE i RETURNING VALUE(rv_val) TYPE i.
     METHODS read_byte RETURNING VALUE(rv_val) TYPE i.
     METHODS read_word RETURNING VALUE(rv_val) TYPE i.
-    TYPES ty_int4_table TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
     METHODS decode_operands
       IMPORTING iv_opcode TYPE i iv_form TYPE string
-      RETURNING VALUE(rt_ops) TYPE ty_int4_table.
+      RETURNING VALUE(rt_ops) TYPE int4_table.
     METHODS read_branch EXPORTING ev_on TYPE abap_bool ev_offset TYPE i.
     METHODS do_branch IMPORTING iv_cond TYPE abap_bool iv_on TYPE abap_bool iv_offset TYPE i.
     METHODS do_return IMPORTING iv_val TYPE i.
     METHODS print_text IMPORTING iv_text TYPE string.
     METHODS to_signed IMPORTING iv_val TYPE i RETURNING VALUE(rv_signed) TYPE i.
     METHODS exec_0op IMPORTING iv_op TYPE i.
-    METHODS exec_1op IMPORTING iv_op TYPE i it_ops TYPE ty_int4_table.
-    METHODS exec_2op IMPORTING iv_op TYPE i it_ops TYPE ty_int4_table.
-    METHODS exec_var IMPORTING iv_op TYPE i it_ops TYPE ty_int4_table.
+    METHODS exec_1op IMPORTING iv_op TYPE i it_ops TYPE int4_table.
+    METHODS exec_2op IMPORTING iv_op TYPE i it_ops TYPE int4_table.
+    METHODS exec_var IMPORTING iv_op TYPE i it_ops TYPE int4_table.
 ENDCLASS.
 
 CLASS zcl_ork_00_zmachine IMPLEMENTATION.
@@ -194,7 +193,7 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
     DATA lv_opcode TYPE i.
     DATA lv_op_type TYPE i.
     DATA lv_op_num TYPE i.
-    DATA lt_operands TYPE ty_int4_table.
+    DATA lt_operands TYPE int4_table.
     DATA lv_form TYPE string.
 
     IF mv_waiting = abap_true OR mv_running = abap_false.
@@ -277,9 +276,7 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
     ENDDO.
     mo_memory->w8( iv_addr = mv_read_text_buf + 1 + lv_len iv_val = 0 ).
 
-    mo_dict->tokenize(
-      iv_text      = lv_line
-      iv_parse_buf = mv_read_parse_buf ).
+    mo_dict->tokenize( iv_text = lv_line iv_text_buf = mv_read_text_buf iv_parse_buf = mv_read_parse_buf ).
     mv_waiting = abap_false.
   ENDMETHOD.
 
@@ -498,7 +495,7 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
         lv_store = read_byte( ).
         DATA(lv_sa) = to_signed( lv_a ). DATA(lv_sb) = to_signed( lv_b ).
         IF lv_sb = 0. lv_val = 0. ELSE. lv_val = lv_sa - ( lv_sa DIV lv_sb ) * lv_sb. ENDIF.
-      set_var( iv_var = lv_store iv_val = lv_val ).
+        set_var( iv_var = lv_store iv_val = lv_val ).
     ENDCASE.
   ENDMETHOD.
 
@@ -556,7 +553,8 @@ CLASS zcl_ork_00_zmachine IMPLEMENTATION.
         IF lv_range <= 0.
           set_var( iv_var = lv_store iv_val = 0 ).
         ELSE.
-          DATA(lv_random) = cl_abap_random_int=>create( min = 1 max = lv_range )->get_next( ).
+          DATA lv_random TYPE i.
+          CALL FUNCTION 'GENERAL_GET_RANDOM_INT' EXPORTING range = lv_range IMPORTING random = lv_random.
           set_var( iv_var = lv_store iv_val = lv_random ).
         ENDIF.
       WHEN 8. mo_stack->push( it_ops[ 1 ] ).
