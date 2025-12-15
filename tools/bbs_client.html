@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SAP HANA BBS - WebSocket Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background-color: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Courier New', monospace;
+    }
+    h1 {
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+      margin-bottom: 10px;
+    }
+    #config {
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #333;
+    }
+    #config label {
+      color: #00ff00;
+      margin-right: 10px;
+    }
+    #config input, #config select {
+      background: #000;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 5px 10px;
+      font-family: 'Courier New', monospace;
+      margin-right: 15px;
+    }
+    #config button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 8px 20px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #config button:hover {
+      background: #00cc00;
+    }
+    #config button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    #terminal-container {
+      border: 2px solid #00ff00;
+      border-radius: 8px;
+      padding: 10px;
+      background: #000;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+    #terminal {
+      width: 820px;
+      height: 500px;
+    }
+    #status {
+      color: #888;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .connected { color: #00ff00 !important; }
+    .disconnected { color: #ff4444 !important; }
+  </style>
+</head>
+<body>
+  <h1>SAP HANA BBS Terminal</h1>
+
+  <div id="config">
+    <label>Protocol:</label>
+    <select id="protocol">
+      <option value="ws">ws:// (HTTP)</option>
+      <option value="wss">wss:// (HTTPS)</option>
+    </select>
+    <label>Host:</label>
+    <input type="text" id="host" placeholder="your-sap-system.com" value="a4h.desude.su" />
+    <label>Port:</label>
+    <input type="text" id="port" placeholder="50000" value="50000" size="6" />
+    <label>User:</label>
+    <input type="text" id="user" placeholder="DEVELOPER" value="AVINOGRADOVA" size="12" />
+    <label>Pass:</label>
+    <input type="password" id="pass" placeholder="password" value="" size="10" />
+    <button id="connectBtn" onclick="toggleConnection()">Connect</button>
+  </div>
+
+  <div id="terminal-container">
+    <div id="terminal"></div>
+  </div>
+
+  <div id="status">Status: <span id="statusText" class="disconnected">Disconnected</span></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+  <script>
+    // APC endpoint path
+    const APC_PATH = "/sap/bc/apc/sap/zapc_bbs_echo";
+
+    let socket = null;
+    let currentLine = "";
+
+    // Initialize xterm.js
+    const term = new Terminal({
+      cursorBlink: true,
+      fontFamily: '"Courier New", Courier, monospace',
+      fontSize: 16,
+      cols: 100,
+      rows: 25,
+      theme: {
+        background: '#000000',
+        foreground: '#00ff00',
+        cursor: '#00ff00',
+        cursorAccent: '#000000'
+      }
+    });
+    term.open(document.getElementById('terminal'));
+    term.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
+    term.writeln('\x1b[32m║\x1b[0m  SAP HANA BBS Client v1.0                                    \x1b[32m║\x1b[0m');
+    term.writeln('\x1b[32m║\x1b[0m  Enter SAP host and port, then click Connect                 \x1b[32m║\x1b[0m');
+    term.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+    term.writeln('');
+
+    // Handle user input
+    term.onData(data => {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+
+      const code = data.charCodeAt(0);
+
+      if (code === 13) { // Enter key
+        term.write('\r\n');
+        socket.send(currentLine);
+        currentLine = "";
+      } else if (code === 127 || code === 8) { // Backspace
+        if (currentLine.length > 0) {
+          currentLine = currentLine.slice(0, -1);
+          term.write('\b \b');
+        }
+      } else if (code >= 32) { // Printable characters
+        currentLine += data;
+        term.write(data);
+      }
+    });
+
+    function updateStatus(text, connected) {
+      const statusEl = document.getElementById('statusText');
+      statusEl.textContent = text;
+      statusEl.className = connected ? 'connected' : 'disconnected';
+    }
+
+    function toggleConnection() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+        return;
+      }
+
+      const host = document.getElementById('host').value.trim();
+      const port = document.getElementById('port').value.trim();
+
+      if (!host) {
+        term.writeln('\x1b[31mError: Please enter SAP host\x1b[0m');
+        return;
+      }
+
+      connect(host, port);
+    }
+
+    function connect(host, port) {
+      const protocol = document.getElementById('protocol').value;
+      const user = document.getElementById('user').value.trim();
+      const pass = document.getElementById('pass').value;
+
+      // Include credentials in URL for Basic Auth
+      const authPart = (user && pass) ? `${encodeURIComponent(user)}:${encodeURIComponent(pass)}@` : '';
+      const wsUrl = `${protocol}://${authPart}${host}:${port}${APC_PATH}`;
+
+      // Log URL without password
+      const displayUrl = `${protocol}://${user ? user + '@' : ''}${host}:${port}${APC_PATH}`;
+      term.writeln(`\r\n\x1b[33mConnecting to ${displayUrl}...\x1b[0m`);
+      updateStatus('Connecting...', false);
+      document.getElementById('connectBtn').disabled = true;
+
+      try {
+        socket = new WebSocket(wsUrl);
+      } catch (e) {
+        term.writeln(`\x1b[31mFailed to create WebSocket: ${e.message}\x1b[0m`);
+        updateStatus('Connection failed', false);
+        document.getElementById('connectBtn').disabled = false;
+        return;
+      }
+
+      socket.onopen = () => {
+        term.writeln('\x1b[32m[CONNECTION ESTABLISHED]\x1b[0m\r\n');
+        updateStatus('Connected', true);
+        document.getElementById('connectBtn').textContent = 'Disconnect';
+        document.getElementById('connectBtn').disabled = false;
+      };
+
+      socket.onmessage = (event) => {
+        // Convert \n to \r\n for proper terminal display
+        const text = event.data.replace(/\r?\n/g, '\r\n');
+        term.write(text);
+      };
+
+      socket.onclose = (event) => {
+        term.writeln(`\r\n\x1b[31m[CONNECTION CLOSED] Code: ${event.code}\x1b[0m`);
+        updateStatus('Disconnected', false);
+        document.getElementById('connectBtn').textContent = 'Connect';
+        document.getElementById('connectBtn').disabled = false;
+        socket = null;
+        currentLine = "";
+      };
+
+      socket.onerror = (error) => {
+        term.writeln('\r\n\x1b[31m[WEBSOCKET ERROR] Check browser console for details\x1b[0m');
+        term.writeln('\x1b[33mTip: Make sure you are logged into SAP WebGUI in another tab\x1b[0m');
+        console.error('WebSocket error:', error);
+        updateStatus('Error', false);
+        document.getElementById('connectBtn').disabled = false;
+      };
+    }
+
+    // Allow Enter key in input fields to trigger connect
+    document.getElementById('host').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') toggleConnection();
+    });
+    document.getElementById('port').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') toggleConnection();
+    });
+  </script>
+</body>
+</html>
