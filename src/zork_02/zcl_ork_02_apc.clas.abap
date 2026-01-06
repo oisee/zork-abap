@@ -1,7 +1,5 @@
 *&---------------------------------------------------------------------*
 *& Class ZCL_ORK_02_APC - Z-Machine WebSocket Terminal with AI Mode
-*& Uses ZLLM framework for proper LLM integration
-*& Tracks all moves (player + AI) with map and export capabilities
 *&---------------------------------------------------------------------*
 CLASS zcl_ork_02_apc DEFINITION
   PUBLIC
@@ -24,7 +22,7 @@ CLASS zcl_ork_02_apc DEFINITION
     CONSTANTS c_game_id TYPE string VALUE 'ZORK-MINI.Z3'.
     CONSTANTS c_memory_id TYPE char32 VALUE 'ZORK_APC_SESSIONS'.
     CONSTANTS c_default_env TYPE string VALUE 'DEFAULT.ENV'.
-    CONSTANTS c_session_expiry_minutes TYPE i VALUE 30.  " Auto-expire after 30 min
+    CONSTANTS c_session_expiry_minutes TYPE i VALUE 30.
 
     TYPES: BEGIN OF ty_session,
              session_id TYPE char32,
@@ -35,7 +33,6 @@ CLASS zcl_ork_02_apc DEFINITION
     CONSTANTS c_mode_play  TYPE string VALUE 'play'.
     CONSTANTS c_mode_watch TYPE string VALUE 'watch'.
 
-    " ANSI escape sequences (initialized in class_constructor)
     CLASS-DATA gv_esc    TYPE string.
     CLASS-DATA gv_yellow TYPE string.
     CLASS-DATA gv_green  TYPE string.
@@ -61,8 +58,9 @@ CLASS zcl_ork_02_apc DEFINITION
     DATA mo_trace     TYPE REF TO zif_llm_00_trace.
     DATA mo_session   TYPE REF TO zif_llm_00_session.
 
-    CLASS-METHODS increment_connections.
-    CLASS-METHODS decrement_connections.
+    CLASS-METHODS register_session IMPORTING iv_session_id TYPE char32.
+    CLASS-METHODS unregister_session IMPORTING iv_session_id TYPE char32.
+    CLASS-METHODS cleanup_expired_sessions CHANGING ct_sessions TYPE ty_sessions.
 
     METHODS send_text
       IMPORTING i_message_manager TYPE REF TO if_apc_wsp_message_manager
@@ -106,12 +104,9 @@ ENDCLASS.
 CLASS zcl_ork_02_apc IMPLEMENTATION.
 
   METHOD class_constructor.
-    " Build ESC character (hex 1B = decimal 27)
     DATA lv_xstr TYPE xstring.
     lv_xstr = '1B'.
     gv_esc = cl_abap_conv_codepage=>create_in( )->convert( source = lv_xstr ).
-
-    " Build ANSI color codes
     gv_yellow = gv_esc && '[33m'.
     gv_green  = gv_esc && '[32m'.
     gv_cyan   = gv_esc && '[36m'.
@@ -125,8 +120,8 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_apc_wsp_extension~on_start.
-    increment_connections( ).
     mv_session_id = cl_system_uuid=>create_uuid_c32_static( ).
+    register_session( CONV #( mv_session_id ) ).
     mv_mode = c_mode_play.
     mv_ai_paused = abap_false.
     mv_ai_turn = 0.
@@ -134,8 +129,7 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
     mv_env_file = c_default_env.
 
     DATA(lv_count) = get_connection_count( ).
-    send_text( i_message_manager = i_message_manager
-               iv_text = get_welcome_banner( ) ).
+    send_text( i_message_manager = i_message_manager iv_text = get_welcome_banner( ) ).
     send_text( i_message_manager = i_message_manager
                iv_text = |Session: { mv_session_id(8) }  User: { sy-uname }  Connections: { lv_count }{ c_crlf }| ).
 
@@ -145,23 +139,16 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
     IF lv_story IS INITIAL.
       send_text( i_message_manager = i_message_manager
                  iv_text = |{ c_crlf }ERROR: Game { c_game_id } not found in SMW0!{ c_crlf }| ).
-      send_text( i_message_manager = i_message_manager
-                 iv_text = |{ gv_cyan }Please upload { c_game_id } to SMW0 (MIME Repository){ gv_reset }{ c_crlf }| ).
       RETURN.
     ENDIF.
 
     mo_zmachine = NEW zcl_ork_00_zmachine( lv_story ).
-
-    " Initialize game tracker immediately for all modes
     init_game_tracker( ).
-
     run_and_output( i_message_manager ).
-    send_json( i_message_manager = i_message_manager
-               iv_type = 'mode' iv_data = mv_mode ).
+    send_json( i_message_manager = i_message_manager iv_type = 'mode' iv_data = mv_mode ).
   ENDMETHOD.
 
   METHOD init_game_tracker.
-    " Create game tool to track all moves (player + AI)
     mo_game_tool = NEW zcl_llm_00_agent_t_game( ).
     mo_game_tool->set_zmachine( mo_zmachine ).
   ENDMETHOD.
@@ -184,15 +171,11 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
 
       CASE lv_cmd.
         WHEN 'mode'.
-          " Save session if leaving watch mode
           IF mv_mode = c_mode_watch AND lv_val = c_mode_play.
             save_session( ).
           ENDIF.
-
           mv_mode = lv_val.
-          send_json( i_message_manager = i_message_manager
-                     iv_type = 'mode' iv_data = mv_mode ).
-
+          send_json( i_message_manager = i_message_manager iv_type = 'mode' iv_data = mv_mode ).
           IF mv_mode = c_mode_watch.
             send_text( i_message_manager = i_message_manager
                        iv_text = |{ c_crlf }{ c_crlf }{ gv_yellow }>>> AI SPECTATOR MODE <<<{ gv_reset }{ c_crlf }| ).
@@ -203,44 +186,11 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
           ELSE.
             send_text( i_message_manager = i_message_manager
                        iv_text = |{ c_crlf }{ gv_green }>>> PLAY MODE <<<{ gv_reset }{ c_crlf }| ).
-            send_text( i_message_manager = i_message_manager
-                       iv_text = |{ gv_green }You are now playing. Type commands below.{ gv_reset }{ c_crlf }{ c_crlf }| ).
           ENDIF.
 
         WHEN 'env'.
-          IF lv_val IS NOT INITIAL.
-            mv_env_file = lv_val.
-          ELSE.
-            mv_env_file = c_default_env.
-          ENDIF.
+          mv_env_file = COND #( WHEN lv_val IS NOT INITIAL THEN lv_val ELSE c_default_env ).
           CLEAR: mo_llm, mo_registry.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_cyan }Env file: { mv_env_file }{ gv_reset }{ c_crlf }| ).
-
-        WHEN 'bin'.
-          mv_llm_bin = lv_val.
-          CLEAR: mo_llm, mo_registry.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_cyan }LLM bin set to: { mv_llm_bin }{ gv_reset }{ c_crlf }| ).
-
-        WHEN 'goal'.
-          mv_ai_goal = lv_val.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_cyan }AI Goal: { mv_ai_goal }{ gv_reset }{ c_crlf }| ).
-
-        WHEN 'pause'.
-          mv_ai_paused = abap_true.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_yellow }[AI PAUSED]{ gv_reset }{ c_crlf }| ).
-          send_json( i_message_manager = i_message_manager
-                     iv_type = 'paused' iv_data = 'true' ).
-
-        WHEN 'resume'.
-          mv_ai_paused = abap_false.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_yellow }[AI RESUMED]{ gv_reset }{ c_crlf }| ).
-          send_json( i_message_manager = i_message_manager
-                     iv_type = 'paused' iv_data = 'false' ).
 
         WHEN 'step'.
           IF mv_mode = c_mode_watch.
@@ -253,11 +203,18 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
             run_ai_steps( i_message_manager = i_message_manager iv_steps = lv_steps ).
           ENDIF.
 
+        WHEN 'pause'.
+          mv_ai_paused = abap_true.
+          send_json( i_message_manager = i_message_manager iv_type = 'paused' iv_data = 'true' ).
+
+        WHEN 'resume'.
+          mv_ai_paused = abap_false.
+          send_json( i_message_manager = i_message_manager iv_type = 'paused' iv_data = 'false' ).
+
         WHEN 'export'.
           handle_export( i_message_manager = i_message_manager iv_format = lv_val ).
 
         WHEN 'map'.
-          " Show current map
           IF mo_game_tool IS BOUND.
             DATA(lv_map) = mo_game_tool->get_map_text( ).
             REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_map WITH c_crlf.
@@ -267,7 +224,6 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
 
         WHEN OTHERS.
       ENDCASE.
-
     ELSE.
       IF mv_mode = c_mode_play.
         mv_last_player_cmd = lv_input.
@@ -278,16 +234,14 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD if_apc_wsp_extension~on_close.
-    " Save session before closing
     save_session( ).
-    decrement_connections( ).
+    unregister_session( CONV #( mv_session_id ) ).
     CLEAR: mo_zmachine, mo_llm, mo_registry, mo_game_tool, mo_signal, mo_session.
   ENDMETHOD.
 
   METHOD if_apc_wsp_extension~on_error.
-    " Save session on error
     save_session( ).
-    decrement_connections( ).
+    unregister_session( CONV #( mv_session_id ) ).
     CLEAR: mo_zmachine, mo_llm, mo_registry, mo_game_tool, mo_signal, mo_session.
   ENDMETHOD.
 
@@ -307,27 +261,18 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
   METHOD run_and_output.
     mo_zmachine->run( ).
     DATA(ls_status) = mo_zmachine->get_status( ).
-
     IF ls_status-output IS NOT INITIAL.
       DATA(lv_output) = ls_status-output.
-
-      " Log player move to game tracker
       IF iv_command IS NOT INITIAL AND mo_game_tool IS BOUND.
-        mo_game_tool->log_move(
-          iv_command  = iv_command
-          iv_response = lv_output
-        ).
+        mo_game_tool->log_move( iv_command = iv_command iv_response = lv_output ).
       ENDIF.
-
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_output WITH c_crlf.
       send_text( i_message_manager = i_message_manager iv_text = lv_output ).
     ENDIF.
-
     IF ls_status-running = abap_false.
       send_text( i_message_manager = i_message_manager
                  iv_text = |{ c_crlf }{ c_crlf }*** GAME OVER ***{ c_crlf }| ).
-      send_json( i_message_manager = i_message_manager
-                 iv_type = 'gameover' iv_data = 'true' ).
+      send_json( i_message_manager = i_message_manager iv_type = 'gameover' iv_data = 'true' ).
     ENDIF.
   ENDMETHOD.
 
@@ -356,13 +301,11 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
         mo_llm = zcl_llm_00_llm_lazy=>new_from_file( lo_file ).
         mo_trace = zcl_llm_00_trace=>new( iv_level = 1 iv_console = abap_false ).
 
-        " Attach existing game tool to zmachine (preserves history)
         IF mo_game_tool IS BOUND.
           mo_game_tool->attach_zmachine( mo_zmachine ).
         ENDIF.
 
         mo_signal = NEW zcl_llm_00_agent_t_signal( ).
-
         mo_registry = zcl_llm_00_tool_registry=>new( ).
         mo_registry->register( mo_game_tool ).
         mo_registry->register( mo_signal ).
@@ -371,13 +314,13 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
           mv_ai_goal = 'Explore the game world and try to complete the adventure'.
         ENDIF.
 
-        " Create session for tracking
         mo_session = zcl_llm_00_session=>new(
           iv_question = |AI playing { c_game_id }: { mv_ai_goal }|
         ).
         mo_session->start_hyper_run( ).
 
         DATA(ls_cfg) = mo_llm->get_config( ).
+        mo_game_tool->set_model_info( iv_model_name = ls_cfg-model_name iv_env_file = mv_env_file ).
         send_text( i_message_manager = i_message_manager
                    iv_text = |{ gv_green }LLM ready: { ls_cfg-model_name }{ gv_reset }{ c_crlf }| ).
         send_text( i_message_manager = i_message_manager
@@ -388,27 +331,20 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_err).
         send_text( i_message_manager = i_message_manager
                    iv_text = |{ gv_red }LLM Error: { lx_err->get_text( ) }{ gv_reset }{ c_crlf }| ).
-        send_text( i_message_manager = i_message_manager
-                   iv_text = |{ gv_yellow }Check: { mv_llm_bin }/{ mv_env_file } exists{ gv_reset }{ c_crlf }| ).
     ENDTRY.
   ENDMETHOD.
 
   METHOD run_ai_steps.
     DO iv_steps TIMES.
-      IF mo_game_tool->is_running( ) = abap_false.
-        EXIT.
-      ENDIF.
-      IF mo_signal->is_exit_signaled( ) = abap_true.
+      IF mo_game_tool->is_running( ) = abap_false OR mo_signal->is_exit_signaled( ) = abap_true.
         EXIT.
       ENDIF.
       IF mv_ai_paused = abap_true AND sy-index > 1.
         EXIT.
       ENDIF.
-
       run_ai_turn( i_message_manager ).
     ENDDO.
 
-    " Save session after steps complete
     IF mo_game_tool->is_running( ) = abap_false OR mo_signal->is_exit_signaled( ) = abap_true.
       save_session( ).
     ENDIF.
@@ -430,69 +366,41 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF mo_signal->is_exit_signaled( ) = abap_true.
-      send_text( i_message_manager = i_message_manager
-                 iv_text = |{ c_crlf }{ gv_yellow }[AI] Agent signaled exit.{ gv_reset }{ c_crlf }| ).
-      RETURN.
-    ENDIF.
-
     mv_ai_turn = mv_ai_turn + 1.
     GET TIME STAMP FIELD lv_start.
 
-    " Log tool call start to session
     DATA(lv_call_id) = |turn_{ mv_ai_turn }|.
     IF mo_session IS BOUND.
-      mo_session->log_tool_call(
-        iv_tool_name = 'game'
-        iv_arguments = |turn { mv_ai_turn }|
-        iv_call_id   = lv_call_id
-      ).
+      mo_session->log_tool_call( iv_tool_name = 'game' iv_arguments = |turn { mv_ai_turn }| iv_call_id = lv_call_id ).
     ENDIF.
 
     TRY.
         DATA(lv_prompt) = build_ai_prompt( ).
-
         DATA(lo_executor) = zcl_llm_00_executor=>new(
-          io_llm      = mo_llm
-          io_registry = mo_registry
-          io_trace    = mo_trace
-        ).
-
-        DATA(ls_result) = lo_executor->run(
-          iv_prompt         = lv_prompt
-          iv_max_iterations = 1
-        ).
+          io_llm = mo_llm io_registry = mo_registry io_trace = mo_trace ).
+        DATA(ls_result) = lo_executor->run( iv_prompt = lv_prompt iv_max_iterations = 1 ).
 
         GET TIME STAMP FIELD lv_end.
         DATA(lv_duration) = CONV decfloat16( lv_end - lv_start ).
-        DATA(lv_duration_ms) = CONV i( lv_duration * 1000 ).
         DATA(lv_duration_s) = COND string(
           WHEN lv_duration < 10 THEN |{ lv_duration DECIMALS = 1 }|
-          ELSE |{ CONV i( lv_duration ) }|
-        ).
+          ELSE |{ CONV i( lv_duration ) }| ).
 
         DATA(lt_transcript) = mo_game_tool->get_transcript( ).
         DATA(lv_last_cmd) = VALUE #( lt_transcript[ lines( lt_transcript ) ]-command OPTIONAL ).
         DATA(lv_game_output) = mo_game_tool->get_output( ).
 
-        " Log tool result to session
         IF mo_session IS BOUND.
           mo_session->log_tool_result(
-            iv_call_id  = lv_call_id
-            iv_success  = abap_true
-            iv_result   = |{ lv_last_cmd }: { lv_game_output }|
-            iv_duration = lv_duration_ms
-          ).
+            iv_call_id = lv_call_id iv_success = abap_true
+            iv_result = |{ lv_last_cmd }: { lv_game_output }|
+            iv_duration = CONV i( lv_duration * 1000 ) ).
           mo_session->inc_iteration( ).
         ENDIF.
 
-        " Format: AI> command (timing)
         IF lv_last_cmd IS NOT INITIAL.
           send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_dim }AI> { gv_reset }{ gv_green }{ lv_last_cmd }{ gv_reset } { gv_dim }({ lv_duration_s }s){ gv_reset }{ c_crlf }| ).
-        ELSE.
-          send_text( i_message_manager = i_message_manager
-                     iv_text = |{ c_crlf }{ gv_dim }AI> (thinking... { lv_duration_s }s){ gv_reset }{ c_crlf }| ).
+            iv_text = |{ c_crlf }{ gv_dim }AI> { gv_reset }{ gv_green }{ lv_last_cmd }{ gv_reset } { gv_dim }({ lv_duration_s }s){ gv_reset }{ c_crlf }| ).
         ENDIF.
 
         IF lv_game_output IS NOT INITIAL.
@@ -504,45 +412,33 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
         LOOP AT lt_signals INTO DATA(ls_sig).
           send_text( i_message_manager = i_message_manager
                      iv_text = |{ gv_yellow }[{ ls_sig-signal }] { ls_sig-message }{ gv_reset }{ c_crlf }| ).
-          " Add signal as finding in session
-          IF mo_session IS BOUND.
-            mo_session->add_finding(
-              iv_category = ls_sig-signal
-              iv_title    = ls_sig-message
-              iv_content  = |Turn { mv_ai_turn }|
-            ).
-          ENDIF.
         ENDLOOP.
 
-        DATA(lv_turn_data) = |{ mv_ai_turn },{ lv_duration_s },{ lv_last_cmd }|.
         send_json( i_message_manager = i_message_manager
-                   iv_type = 'turn' iv_data = lv_turn_data ).
+                   iv_type = 'turn' iv_data = |{ mv_ai_turn },{ lv_duration_s },{ lv_last_cmd }| ).
 
         IF mo_game_tool->is_running( ) = abap_false.
           send_text( i_message_manager = i_message_manager
                      iv_text = |{ c_crlf }{ gv_yellow }*** GAME OVER ***{ gv_reset }{ c_crlf }| ).
-          send_json( i_message_manager = i_message_manager
-                     iv_type = 'gameover' iv_data = 'true' ).
-          " End hyper run on game over
-          IF mo_session IS BOUND.
-            mo_session->end_hyper_run(
-              iv_verdict  = 'GAME_OVER'
-              iv_feedback = |Completed after { mv_ai_turn } turns|
-            ).
-          ENDIF.
+          send_json( i_message_manager = i_message_manager iv_type = 'gameover' iv_data = 'true' ).
         ENDIF.
 
       CATCH cx_root INTO DATA(lx_err).
         DATA(lv_err_text) = lx_err->get_text( ).
 
-        " Log error to session
         IF mo_session IS BOUND.
           mo_session->log_tool_result(
-            iv_call_id  = lv_call_id
-            iv_success  = abap_false
-            iv_result   = lv_err_text
-            iv_duration = 0
-          ).
+            iv_call_id = lv_call_id iv_success = abap_false iv_result = lv_err_text iv_duration = 0 ).
+        ENDIF.
+
+        " Check for API errors (rate limit, ZCX_S from APC context, etc.) - tell client to retry
+        IF lv_err_text CS 'RATE_LIMIT' OR lv_err_text CS '429' OR lv_err_text CS 'Too Many'
+           OR lv_err_text CS 'ZCX_S'.
+          send_text( i_message_manager = i_message_manager
+                     iv_text = |{ gv_yellow }[API ERROR] LLM temporarily unavailable - click Step to retry{ gv_reset }{ c_crlf }| ).
+          send_json( i_message_manager = i_message_manager iv_type = 'ratelimit' iv_data = 'true' ).
+          mv_ai_turn = mv_ai_turn - 1.
+          RETURN.
         ENDIF.
 
         IF lv_err_text CS 'token' OR lv_err_text CS 'length' OR lv_err_text CS 'context'.
@@ -559,11 +455,7 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
   METHOD build_ai_prompt.
     DATA(lv_nl) = cl_abap_char_utilities=>newline.
     DATA(lv_move_count) = mo_game_tool->get_move_count( ).
-
-    DATA(lv_context) = mo_game_tool->get_context_for_prompt(
-      iv_recent_moves = 10
-      iv_max_chars    = 12000
-    ).
+    DATA(lv_context) = mo_game_tool->get_context_for_prompt( iv_recent_moves = 10 iv_max_chars = 12000 ).
 
     IF mv_ai_turn = 1.
       rv_ =
@@ -600,25 +492,19 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
       WHEN 'json'.
         lv_content = mo_game_tool->export_json( ).
         lv_filename = |zork_session_{ mv_session_id(8) }.json|.
-
       WHEN 'map'.
         lv_content = mo_game_tool->get_map_text( ).
         lv_filename = |zork_map_{ mv_session_id(8) }.txt|.
-
-      WHEN OTHERS. " Default to markdown
+      WHEN OTHERS.
         lv_content = mo_game_tool->export_markdown( ).
         lv_filename = |zork_session_{ mv_session_id(8) }.md|.
     ENDCASE.
 
-    " Send as download
     DATA(lv_export_json) = |\{"type":"export","filename":"{ lv_filename }","content":"|.
-
-    " Escape content for JSON
     REPLACE ALL OCCURRENCES OF '\' IN lv_content WITH '\\'.
     REPLACE ALL OCCURRENCES OF '"' IN lv_content WITH '\"'.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline IN lv_content WITH '\n'.
     REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>cr_lf IN lv_content WITH '\n'.
-
     lv_export_json = lv_export_json && lv_content && '"}'.
 
     DATA(lo_message) = i_message_manager->create_message( ).
@@ -630,54 +516,69 @@ CLASS zcl_ork_02_apc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD save_session.
-    " Save session to persistent store
-    CHECK mo_session IS BOUND.
-    CHECK mv_ai_turn > 0.  " Only save if AI actually played
-
+    CHECK mo_session IS BOUND AND mv_ai_turn > 0.
     TRY.
-        " Set final answer with transcript summary
         DATA(lt_transcript) = mo_game_tool->get_transcript( ).
         DATA(lv_summary) = |AI played { mv_ai_turn } turns. Commands: |.
         LOOP AT lt_transcript INTO DATA(ls_move).
-          IF sy-tabix > 1.
-            lv_summary = lv_summary && ', '.
-          ENDIF.
+          IF sy-tabix > 1. lv_summary = lv_summary && ', '. ENDIF.
           lv_summary = lv_summary && ls_move-command.
-          IF sy-tabix > 20.
-            lv_summary = lv_summary && '...'.
-            EXIT.
-          ENDIF.
+          IF sy-tabix > 20. lv_summary = lv_summary && '...'. EXIT. ENDIF.
         ENDLOOP.
         mo_session->set_answer( lv_summary ).
-
-        " Save to store
         zcl_llm_00_session_store=>get_instance( )->save( mo_session ).
-
       CATCH cx_root.
-        " Ignore save errors on cleanup
     ENDTRY.
   ENDMETHOD.
 
-  METHOD increment_connections.
-    DATA lv_count TYPE i.
-    IMPORT count = lv_count FROM SHARED MEMORY indx(zk) ID c_memory_id.
-    IF sy-subrc <> 0. lv_count = 0. ENDIF.
-    lv_count = lv_count + 1.
-    EXPORT count = lv_count TO SHARED MEMORY indx(zk) ID c_memory_id.
+  METHOD register_session.
+    DATA lt_sessions TYPE ty_sessions.
+    DATA ls_session TYPE ty_session.
+    IMPORT sessions = lt_sessions FROM SHARED MEMORY indx(zk) ID c_memory_id.
+    cleanup_expired_sessions( CHANGING ct_sessions = lt_sessions ).
+    ls_session-session_id = iv_session_id.
+    GET TIME STAMP FIELD ls_session-started_at.
+    INSERT ls_session INTO TABLE lt_sessions.
+    EXPORT sessions = lt_sessions TO SHARED MEMORY indx(zk) ID c_memory_id.
   ENDMETHOD.
 
-  METHOD decrement_connections.
-    DATA lv_count TYPE i.
-    IMPORT count = lv_count FROM SHARED MEMORY indx(zk) ID c_memory_id.
-    IF sy-subrc = 0 AND lv_count > 0.
-      lv_count = lv_count - 1.
-      EXPORT count = lv_count TO SHARED MEMORY indx(zk) ID c_memory_id.
-    ENDIF.
+  METHOD unregister_session.
+    DATA lt_sessions TYPE ty_sessions.
+    IMPORT sessions = lt_sessions FROM SHARED MEMORY indx(zk) ID c_memory_id.
+    CHECK sy-subrc = 0.
+    DELETE lt_sessions WHERE session_id = iv_session_id.
+    EXPORT sessions = lt_sessions TO SHARED MEMORY indx(zk) ID c_memory_id.
+  ENDMETHOD.
+
+  METHOD cleanup_expired_sessions.
+    DATA lv_now TYPE timestampl.
+    DATA lv_expiry_seconds TYPE decfloat16.
+    DATA lt_expired TYPE STANDARD TABLE OF char32.
+
+    GET TIME STAMP FIELD lv_now.
+    lv_expiry_seconds = c_session_expiry_minutes * 60.
+
+    LOOP AT ct_sessions INTO DATA(ls_session).
+      IF ( lv_now - ls_session-started_at ) > lv_expiry_seconds.
+        APPEND ls_session-session_id TO lt_expired.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT lt_expired INTO DATA(lv_session_id).
+      DELETE ct_sessions WHERE session_id = lv_session_id.
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD get_connection_count.
-    IMPORT count = rv_count FROM SHARED MEMORY indx(zk) ID c_memory_id.
-    IF sy-subrc <> 0. rv_count = 0. ENDIF.
+    DATA lt_sessions TYPE ty_sessions.
+    IMPORT sessions = lt_sessions FROM SHARED MEMORY indx(zk) ID c_memory_id.
+    IF sy-subrc <> 0.
+      rv_count = 0.
+      RETURN.
+    ENDIF.
+    cleanup_expired_sessions( CHANGING ct_sessions = lt_sessions ).
+    EXPORT sessions = lt_sessions TO SHARED MEMORY indx(zk) ID c_memory_id.
+    rv_count = lines( lt_sessions ).
   ENDMETHOD.
 
 ENDCLASS.
